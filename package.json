@@ -1,0 +1,16 @@
+{
+  "name": "strato-dapp",
+  "version": "0.1.0",
+  "description": "Configuration and framework for STRATO DApps",
+  "main": "index.js",
+  "repository": "https://github.com/blockapps/strato-dapp",
+  "author": "BlockApps Inc",
+  "license": "MIT",
+  "engines": {
+    "node": ">=8.10"
+  },
+  "dependencies": {
+    "commander": "^2.19.0",
+    "fs-extra": "^7.0.1"
+  }
+}
