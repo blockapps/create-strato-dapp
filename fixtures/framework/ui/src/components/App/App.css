@@ -1,0 +1,13 @@
+@import "~normalize.css";
+@import "~@blueprintjs/core/lib/css/blueprint.css";
+@import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
+
+.App {
+  padding: 16px;
+}
+
+.App-Card {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
