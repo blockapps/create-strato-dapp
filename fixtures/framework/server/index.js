@@ -1,33 +1,34 @@
-// TODO: use ES6
-require('dotenv').config()
-const express = require('express')
-const helmet = require('helmet')
-const bodyParser = require('body-parser');
-const expressWinston = require('express-winston');
-const winston = require('winston');
-const { baseUrl, deployParamName } = require('./helpers/constants');
-const routes = require('./api/v1/routes');
-const cors = require('cors')
-const { fsUtil, util } = require('blockapps-rest')
+import express from "express";
+import helmet from "helmet";
+import bodyParser from "body-parser";
+import expressWinston from "express-winston";
+import winston from "winston";
+import { baseUrl, deployParamName } from "./helpers/constants";
+import routes from "./api/v1/routes";
+import cors from "cors";
+import { fsUtil } from "blockapps-rest";
+import config from "./load.config";
 
 const app = express();
 
 // Load deploy file
-const deploy = fsUtil.get(`${util.cwd}/config/${process.env.CONFIG}.deploy.json`)
-if(!deploy) throw new Error('Unable to locate deploy file')
-app.set(deployParamName, JSON.parse(deploy))
+const deploy = fsUtil.getYaml(config.deployFilename);
+if (!deploy) {
+  throw new Error(`Deploy file '${config.deployFilename}' not found`);
+}
+app.set(deployParamName, deploy);
+
+app.set(deployParamName, JSON.parse(deploy));
 
 // Setup middleware
-app.use(helmet())
-app.use(cors())
-app.use(bodyParser.json())
+app.use(helmet());
+app.use(cors());
+app.use(bodyParser.json());
 
 // Setup logging
 app.use(
   expressWinston.logger({
-    transports: [
-      new winston.transports.Console()
-    ],
+    transports: [new winston.transports.Console()],
     meta: true,
     expressFormat: true
   })
@@ -42,4 +43,4 @@ app.use(`${baseUrl}`, routes);
 const port = process.env.PORT || 3030;
 const server = app.listen(port, () => console.log(`Listening on ${port}`));
 
-module.exports = server;
+export default server;

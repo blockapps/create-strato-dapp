@@ -1,8 +1,12 @@
-const { rest, util, fsUtil } = require('blockapps-rest')
-const contractName = 'FrameworkDapp'
-const fs = require('fs')
+import { rest, util, fsUtil, importer } from "blockapps-rest";
+import fs from "fs";
+import config from "../../load.config";
+import { yamlWrite } from "../../helpers/config";
 
-function deploy(user, contract, options) {
+const contractName = "FrameworkDapp";
+const options = { config };
+
+function deploy(user, contract) {
   // author the deployment
   // TODO: Write deploy.yaml instead of deploy.json
 
@@ -12,40 +16,47 @@ function deploy(user, contract, options) {
       name: contract.name,
       address: contract.address
     }
+  };
+
+  if (options.config.apiDebug) {
+    console.log("deploy filename:", options.config.deployFilename);
+    console.log(yamlSafeDumpSync(deployment));
   }
 
-  fs.writeFileSync(`${util.cwd}/config/${process.env.CONFIG}.deploy.json`, JSON.stringify(deployment, null, 2))
+  yamlWrite(deployment, options.config.deployFilename);
 
-  return deployment
+  return deployment;
 }
 
-async function uploadContract(user, options) {
-  const source = fsUtil.get(`${util.cwd}/${options.config.dappPath}/dapp/contracts/frameworkDapp.sol`)
+async function uploadContract(user) {
+  const source = fsUtil.get(
+    `${util.cwd}/${options.config.dappPath}/dapp/contracts/frameworkDapp.sol`
+  );
   const contract = {
     name: contractName,
-    source, 
+    source,
     args: {}
-  }
-  const uploadedContract = await rest.createContract(user, contract, options)
-  const bound = await bind(user, uploadedContract)
-  return bound
+  };
+  const uploadedContract = await rest.createContract(user, contract, options);
+  uploadContract.src = "removed";
+  const bound = await bind(user, uploadedContract);
+  return bound;
 }
 
 async function bind(user, _contract) {
-  const contract = _contract
+  const contract = _contract;
 
-  contract.deploy = (options) => {
-    const deployment = deploy(user, contract, options)
-    return deployment
-  } 
+  contract.deploy = async function(deplo) {
+    const deployment = deploy(user, contract);
+    return deployment;
+  };
 
   // TODO: Write a sample manager pattern contract
 
-  return contract
+  return contract;
 }
 
-
-module.exports = {
+export default {
   bind,
   uploadContract
-}
+};
