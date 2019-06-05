@@ -1,5 +1,8 @@
-import { rest, util, fsUtil, importer } from "blockapps-rest";
+const ba = require("blockapps-rest")
 import fs from "fs";
+const common = ba.common;
+const rest = ba.rest;
+const {fsutil, util, importer }= common;
 import config from "../../load.config";
 import { yamlWrite } from "../../helpers/config";
 
@@ -29,7 +32,7 @@ function deploy(user, contract) {
 }
 
 async function uploadContract(user) {
-  const source = fsUtil.get(
+  const source = fsutil.getJson(
     `${util.cwd}/${options.config.dappPath}/dapp/contracts/frameworkDapp.sol`
   );
   const contract = {

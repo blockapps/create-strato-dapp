@@ -97,7 +97,7 @@ function run(dir) {
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
     start: "babel-node index",
-    deploy: "mocha dapp/dapp/dapp.deploy.js -b",
+    deploy: "cp config/${SERVER:-localhost}.config.yaml config.yaml && yarn mocha-babel dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml -bmocha dapp/dapp/dapp.deploy.js -b",
     build: "cd blockapps-sol && yarn install && yarn build && cd .."
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
