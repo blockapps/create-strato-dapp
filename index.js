@@ -3,6 +3,8 @@ const package = require("./package.json");
 const fs = require("fs-extra");
 const path = require("path");
 const spawn = require("cross-spawn");
+const inquirer = require("inquirer");
+const yaml = require('js-yaml');
 const log = console.log;
 const error = console.error;
 let directory;
@@ -30,6 +32,41 @@ const serverDirectory = `${directory}-server`;
 const uiDirectory = `${directory}-ui`;
 const nginxDirectory = "nginx-docker";
 
+async function collectOauthDetails() {
+  let oauthDetails = {};
+  function validateNotEmpty(input){
+    return input !== '';
+  }
+
+  const prompts = [
+    {
+      name: "appTokenCookieName", default: `${directory}_session`
+    }, {
+      name: "clientId", validate: validateNotEmpty
+    }, {
+      name: "clientSecret", validate: validateNotEmpty
+    }, {
+      name: "openIdDiscoveryUrl", default: "${SERVER:-localhost}"
+    }, {
+      name: "redirectUri", default: "http:${nodeHost}/api/v1/authentication/callback"
+    }, {
+      name: "logoutRedirectUri", default: "http:${nodeHost}"
+    }
+  ]
+  await inquirer.prompt(prompts).then(answer => {
+    oauthDetails = answer
+  })
+
+  let doc = await yaml.safeLoad(fs.readFileSync(__dirname + '/fixtures/framework/server/config/localhost.config.yaml', 'utf8'));
+  doc.nodes[0].oauth = Object.assign(await doc.nodes[0].oauth, oauthDetails)
+  fs.writeFile(__dirname + '/fixtures/framework/server/config/localhost.config.yaml', yaml.safeDump(doc), (err) => {
+    if (err) {
+      console.log(err);
+    }
+  });
+}
+
+
 function printUsage(errMsg) {
   error(errMsg);
   log(`Usage: ${package.name} create <project-name>`);
@@ -38,8 +75,12 @@ function printUsage(errMsg) {
   log(`   ${package.name} create my-strato-dapp`);
 }
 
-function run(dir) {
+async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
+
+  log(`Recording oAuth Info...`);
+  await collectOauthDetails();
+
   log(`Ensuring directory ${dir}...`);
   fs.ensureDirSync(dir);
 
@@ -65,7 +106,7 @@ function run(dir) {
   spawn.sync("yarn", ["init", "-yp"]);
 
   log(`\t\tInstalling server node modules...`);
-  spawn.sync("yarn", ["add", "blockapps-rest@alpha"]);
+  spawn.sync("yarn", ["add", "blockapps-rest@latest"]);
   spawn.sync("yarn", ["add", "express"]);
   spawn.sync("yarn", ["add", "helmet"]);
   spawn.sync("yarn", ["add", "body-parser"]);
