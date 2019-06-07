@@ -2,7 +2,7 @@ const ba = require("blockapps-rest")
 import fs from "fs";
 const common = ba.common;
 const rest = ba.rest;
-const {fsutil, util, importer }= common;
+const {fsutil, util, cwd, importer }= common;
 import config from "../../load.config";
 import { yamlWrite } from "../../helpers/config";
 
@@ -32,15 +32,8 @@ function deploy(user, contract) {
 }
 
 async function uploadContract(user) {
-  const source = fsutil.getJson(
-    `${util.cwd}/${options.config.dappPath}/dapp/contracts/frameworkDapp.sol`
-  );
-  const contract = {
-    name: contractName,
-    source,
-    args: {}
-  };
-  const uploadedContract = await rest.createContract(user, contract, options);
+  const contractFileName = `${cwd}/${options.config.dappPath}/dapp/contracts/frameworkDapp.sol`;
+  const uploadedContract = await rest.uploadContract(user, contractName, contractFileName, options);
   uploadContract.src = "removed";
   const bound = await bind(user, uploadedContract);
   return bound;
@@ -55,7 +48,6 @@ async function bind(user, _contract) {
   };
 
   // TODO: Write a sample manager pattern contract
-
   return contract;
 }
 
