@@ -18,8 +18,6 @@ if (!deploy) {
 }
 app.set(deployParamName, deploy);
 
-app.set(deployParamName, JSON.parse(deploy));
-
 // Setup middleware
 app.use(helmet());
 app.use(cors());

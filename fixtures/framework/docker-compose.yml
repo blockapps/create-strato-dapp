@@ -1,0 +1,34 @@
+version: "2.1"
+services:
+  <dir>-server:
+    image: <dir>-server:latest
+    build: ./server
+    restart: always
+    environment:
+      - SERVER=${SERVER:-docker}
+  <dir>-ui:
+    depends_on:
+      - <dir>-server
+    image: <dir>-ui:latest
+    build: ./ui
+    restart: always
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+  <dir>-nginx:
+    depends_on:
+      - <dir>-ui
+    image: <dir>-nginx:latest
+    build: ./nginx-docker
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx-docker/ssl:/tmp/ssl:ro
+    environment:
+      - SSL=${SSL:-false}
+      - SSL_CERT_TYPE=${SSL_CERT_TYPE:-crt}
+networks:
+  default:
+    external:
+      name: strato_default

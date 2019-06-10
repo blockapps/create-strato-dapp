@@ -80,10 +80,10 @@ function printUsage(errMsg) {
 async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
 
-  log(`Recording oAuth Info...`);
+  log(`Collecting configuration parameters...`);
   await collectOauthDetails();
 
-  log(`Ensuring directory ${dir}...`);
+  log(`Checking directory ${dir}...`);
   fs.ensureDirSync(dir);
 
   let startDir = process.cwd();
@@ -137,11 +137,11 @@ async function run(dir) {
   fs.copySync(`${__dirname}/fixtures/framework/server/`, "./");
 
   log("\t\tUpdating server configs...");
-  let doc = await yaml.safeLoad(
+  let localhostConfig = await yaml.safeLoad(
     fs.readFileSync(`./config/localhost.config.yaml`, "utf8")
   );
 
-  doc.nodes[0].oauth = {
+  localhostConfig.nodes[0].oauth = {
     appTokenCookieName: answers.appTokenCookieName,
     scope: "email openid",
     appTokenCookieMaxAge: 7776000000, // 90 days: 90 * 24 * 60 * 60 * 1000
@@ -152,15 +152,35 @@ async function run(dir) {
     logoutRedirectUri: answers.logoutRedirectUri
   };
 
-  let tokenDoc = Object.assign({}, doc);
-  tokenDoc.nodes[0].oauth.redirectUri = "http://localhost:8000/callback";
-  tokenDoc.nodes[0].oauth.logoutRedirectUri = "http://localhost:8000";
+  let tokenGetterConfig = JSON.parse(JSON.stringify(localhostConfig));
+  tokenGetterConfig.nodes[0].oauth.redirectUri =
+    "http://localhost:8000/callback";
+  tokenGetterConfig.nodes[0].oauth.logoutRedirectUri = "http://localhost:8000";
 
-  doc = await yaml.safeDump(doc);
-  tokenDoc = await yaml.safeDump(tokenDoc);
+  let dockerConfig = JSON.parse(JSON.stringify(localhostConfig));
+  dockerConfig.nodes[0].url = "http://nginx:80";
+  dockerConfig.deployFilename = "config/docker.deploy.yaml";
 
-  fs.writeFileSync(`./config/localhost.config.yaml`, doc);
-  fs.writeFileSync(`./config/token-getter.config.yaml`, tokenDoc);
+  fs.writeFileSync(
+    `./config/localhost.config.yaml`,
+    await yaml.safeDump(localhostConfig)
+  );
+  fs.writeFileSync(
+    `./config/token-getter.config.yaml`,
+    await yaml.safeDump(tokenGetterConfig)
+  );
+  fs.writeFileSync(
+    `./config/docker.config.yaml`,
+    await yaml.safeDump(dockerConfig)
+  );
+
+  let serverDockerFile = fs.readFileSync("Dockerfile", "utf-8");
+  serverDockerFile = serverDockerFile.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("Dockerfile", serverDockerFile);
+
+  let serverDockerRun = fs.readFileSync("docker-run.sh", "utf-8");
+  serverDockerRun = serverDockerRun.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-run.sh", serverDockerRun);
 
   log(`\t\tUpdating server scripts...`);
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
@@ -208,9 +228,43 @@ async function run(dir) {
   };
   fs.writeFileSync("package.json", JSON.stringify(uiPackage, null, 2));
 
+  let uiDockerFile = fs.readFileSync("Dockerfile", "utf-8");
+  uiDockerFile = uiDockerFile.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("Dockerfile", uiDockerFile);
+
+  let uiDockerRun = fs.readFileSync("docker-run.sh", "utf-8");
+  uiDockerRun = uiDockerRun.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-run.sh", uiDockerRun);
+
   process.chdir(`${startDir}/${dir}`);
 
-  // TODO: dockerize
+  log(`\t\tSetting up docker`);
+
+  process.chdir(`${nginxDirectory}`);
+  fs.copySync(`${__dirname}/fixtures/framework/nginx-docker/`, "./");
+
+  let nginxDockerCompose = fs.readFileSync("docker-compose.yml", "utf-8");
+  nginxDockerCompose = nginxDockerCompose.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-compose.yml", nginxDockerCompose);
+
+  let nginxNoSslDocker = fs.readFileSync("nginx-nossl-docker.conf", "utf-8");
+  nginxNoSslDocker = nginxNoSslDocker.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("nginx-nossl-docker.conf", nginxNoSslDocker);
+
+  let nginxSslDocker = fs.readFileSync("nginx-ssl-docker.conf", "utf-8");
+  nginxSslDocker = nginxSslDocker.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("nginx-ssl-docker.conf", nginxSslDocker);
+
+  process.chdir(`${startDir}/${dir}`);
+
+  log(`\t\tUpdating README`);
+  fs.copyFileSync(`${__dirname}/fixtures/framework/README.md`, "README.md");
+  let readme = fs.readFileSync("README.md", "utf-8");
+  readme = readme.replace(/<dir>/g, `${dir}`);
+  readme = readme.replace(/<client-id>/g, `${answers.clientId}`);
+  readme = readme.replace(/<client-secret>/g, `${answers.clientSecret}`);
+  readme = readme.replace(/<discovery-url>/g, `${answers.openIdDiscoveryUrl}`);
+  fs.writeFileSync("README.md", readme);
 
   // TODO: Print usage instructions
   log("Happy BUIDLing!");
