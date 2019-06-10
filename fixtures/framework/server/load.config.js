@@ -1,14 +1,12 @@
-const ba = require('blockapps-rest');
-const common = ba.common;
-const fsutil = common.fsutil;
+import { fsUtil } from "blockapps-rest";
 
 let config;
 
 if (!config) {
-  config = fsutil.getYaml(
-    `config/${
-      process.env.SERVER ? process.env.SERVER : "localhost"
-    }.config.yaml`
+  config = fsUtil.getYaml(
+    process.env.SERVER
+      ? `config/${process.env.SERVER}.config.yaml`
+      : `config.yaml`
   );
 }
 

@@ -4,7 +4,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const spawn = require("cross-spawn");
 const inquirer = require("inquirer");
-const yaml = require('js-yaml');
+const yaml = require("js-yaml");
 const log = console.log;
 const error = console.error;
 let directory;
@@ -31,41 +31,43 @@ if (typeof directory === "object") {
 const serverDirectory = `${directory}-server`;
 const uiDirectory = `${directory}-ui`;
 const nginxDirectory = "nginx-docker";
+const nodeHost = "localhost";
+let answers = {};
 
 async function collectOauthDetails() {
-  let oauthDetails = {};
-  function validateNotEmpty(input){
-    return input !== '';
+  function validateNotEmpty(input) {
+    return input !== "";
   }
 
   const prompts = [
     {
-      name: "appTokenCookieName", default: `${directory}_session`
-    }, {
-      name: "clientId", validate: validateNotEmpty
-    }, {
-      name: "clientSecret", validate: validateNotEmpty
-    }, {
-      name: "openIdDiscoveryUrl", default: "${SERVER:-localhost}"
-    }, {
-      name: "redirectUri", default: "http:${nodeHost}/api/v1/authentication/callback"
-    }, {
-      name: "logoutRedirectUri", default: "http:${nodeHost}"
+      name: "appTokenCookieName",
+      default: `${directory}_session`
+    },
+    {
+      name: "clientId",
+      validate: validateNotEmpty
+    },
+    {
+      name: "clientSecret",
+      validate: validateNotEmpty
+    },
+    {
+      name: "openIdDiscoveryUrl",
+      validate: validateNotEmpty
+    },
+    {
+      name: "redirectUri",
+      default: `http://${nodeHost}/api/v1/authentication/callback`
+    },
+    {
+      name: "logoutRedirectUri",
+      default: `http://${nodeHost}`
     }
-  ]
-  await inquirer.prompt(prompts).then(answer => {
-    oauthDetails = answer
-  })
+  ];
 
-  let doc = await yaml.safeLoad(fs.readFileSync(__dirname + '/fixtures/framework/server/config/localhost.config.yaml', 'utf8'));
-  doc.nodes[0].oauth = Object.assign(await doc.nodes[0].oauth, oauthDetails)
-  fs.writeFile(__dirname + '/fixtures/framework/server/config/localhost.config.yaml', yaml.safeDump(doc), (err) => {
-    if (err) {
-      console.log(err);
-    }
-  });
+  answers = await inquirer.prompt(prompts);
 }
-
 
 function printUsage(errMsg) {
   error(errMsg);
@@ -117,6 +119,7 @@ async function run(dir) {
   spawn.sync("yarn", ["add", "dotenv"]);
   spawn.sync("yarn", ["add", "mocha"]);
   spawn.sync("yarn", ["add", "cors"]);
+  spawn.sync("yarn", ["add", "jwt-decode"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/core"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/cli"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/node"]);
@@ -133,12 +136,42 @@ async function run(dir) {
   log(`\t\tCopying server fixtures...`);
   fs.copySync(`${__dirname}/fixtures/framework/server/`, "./");
 
+  log("\t\tUpdating server configs...");
+  let doc = await yaml.safeLoad(
+    fs.readFileSync(`./config/localhost.config.yaml`, "utf8")
+  );
+
+  doc.nodes[0].oauth = {
+    appTokenCookieName: answers.appTokenCookieName,
+    scope: "email openid",
+    appTokenCookieMaxAge: 7776000000, // 90 days: 90 * 24 * 60 * 60 * 1000
+    clientId: answers.clientId,
+    clientSecret: answers.clientSecret,
+    openIdDiscoveryUrl: answers.openIdDiscoveryUrl,
+    redirectUri: answers.redirectUri,
+    logoutRedirectUri: answers.logoutRedirectUri
+  };
+
+  let tokenDoc = Object.assign({}, doc);
+  tokenDoc.nodes[0].oauth.redirectUri = "http://localhost:8000/callback";
+  tokenDoc.nodes[0].oauth.logoutRedirectUri = "http://localhost:8000";
+
+  doc = await yaml.safeDump(doc);
+  tokenDoc = await yaml.safeDump(tokenDoc);
+
+  fs.writeFileSync(`./config/localhost.config.yaml`, doc);
+  fs.writeFileSync(`./config/token-getter.config.yaml`, tokenDoc);
+
   log(`\t\tUpdating server scripts...`);
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
+    "mocha-babel": "node_modules/.bin/mocha --require @babel/register",
+    "token-getter":
+      "node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --port ${PORT:-8000} --config config/${SERVER:-token-getter}.config.yaml",
     start: "babel-node index",
-    deploy: "cp config/${SERVER:-localhost}.config.yaml config.yaml && yarn mocha-babel dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml -bmocha dapp/dapp/dapp.deploy.js -b",
+    deploy:
+      "cp config/${SERVER:-localhost}.config.yaml config.yaml && yarn mocha-babel dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
     build: "cd blockapps-sol && yarn install && yarn build && cd .."
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));

@@ -1,17 +1,15 @@
-const ba = require("blockapps-rest")
 import fs from "fs";
-const common = ba.common;
-const rest = ba.rest;
-const {fsutil, util, cwd, importer }= common;
+import { rest, util, importer } from "blockapps-rest";
+const { createContract, getState, call } = rest;
 import config from "../../load.config";
-import { yamlWrite } from "../../helpers/config";
+import { yamlWrite, yamlSafeDumpSync } from "../../helpers/config";
 
 const contractName = "FrameworkDapp";
+const contractFilename = `${config.dappPath}/dapp/contracts/frameworkDapp.sol`;
 const options = { config };
 
-function deploy(user, contract) {
+function deploy(contract) {
   // author the deployment
-  // TODO: Write deploy.yaml instead of deploy.json
 
   const deployment = {
     url: options.config.nodes[0].url,
@@ -31,22 +29,25 @@ function deploy(user, contract) {
   return deployment;
 }
 
-async function uploadContract(user) {
-  const contractFileName = `${cwd}/${options.config.dappPath}/dapp/contracts/frameworkDapp.sol`;
-  const uploadedContract = await rest.uploadContract(user, contractName, contractFileName, options);
-  uploadContract.src = "removed";
-  const bound = await bind(user, uploadedContract);
-  return bound;
-}
-
-async function bind(user, _contract) {
-  const contract = _contract;
-
-  contract.deploy = async function(deplo) {
-    const deployment = deploy(user, contract);
-    return deployment;
+async function uploadContract(token) {
+  const contractArgs = {
+    name: contractName,
+    source: await importer.combine(contractFilename)
   };
 
+  const contract = await createContract(token, contractArgs, options);
+  contract.src = "removed";
+
+  return bind(token, contract);
+}
+
+function bind(token, _contract) {
+  const contract = _contract;
+
+  contract.deploy = function() {
+    const deployment = deploy(contract);
+    return deployment;
+  };
   // TODO: Write a sample manager pattern contract
   return contract;
 }
