@@ -126,13 +126,6 @@ async function run(dir) {
   spawn.sync("yarn", ["add", "--dev", "@babel/preset-env"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/register"]);
 
-  log("\t\tInitializing blockapps-sol submodule");
-  spawn.sync("git", [
-    "submodule",
-    "add",
-    "https://github.com/blockapps/blockapps-sol#SER-25_compatibilityWithRest"
-  ]);
-
   log(`\t\tCopying server fixtures...`);
   fs.copySync(`${__dirname}/fixtures/framework/server/`, "./");
 
@@ -196,6 +189,16 @@ async function run(dir) {
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
+  log("\t\tInitializing blockapps-sol submodule");
+  spawn.sync("git", [
+    "submodule",
+    "add",
+    "-b",
+    "SER-25_compatibilityWithRest",
+    "https://github.com/blockapps/blockapps-sol"
+  ]);
+  spawn.sync("yarn", ["build"]);
+
   process.chdir(`${startDir}/${dir}`);
 
   log(`\tSetting up UI`);
@@ -224,7 +227,7 @@ async function run(dir) {
   const uiPackage = JSON.parse(uiPackageJson);
   uiPackage.scripts = {
     ...uiPackage.scripts,
-    develop: "REACT_APP_URL=http://localhost:3030 yarn start"
+    develop: "REACT_APP_URL=http://localhost yarn start"
   };
   fs.writeFileSync("package.json", JSON.stringify(uiPackage, null, 2));
 
@@ -257,8 +260,22 @@ async function run(dir) {
 
   process.chdir(`${startDir}/${dir}`);
 
+  fs.copyFileSync(
+    `${__dirname}/fixtures/framework/docker-compose.yml`,
+    "docker-compose.yml"
+  );
+  fs.copyFileSync(
+    `${__dirname}/fixtures/framework/.dockerignore`,
+    ".dockerignore"
+  );
+
+  let dockerCompose = fs.readFileSync("docker-compose.yml", "utf-8");
+  dockerCompose = dockerCompose.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-compose.yml", dockerCompose);
+
   log(`\t\tUpdating README`);
   fs.copyFileSync(`${__dirname}/fixtures/framework/README.md`, "README.md");
+
   let readme = fs.readFileSync("README.md", "utf-8");
   readme = readme.replace(/<dir>/g, `${dir}`);
   readme = readme.replace(/<client-id>/g, `${answers.clientId}`);

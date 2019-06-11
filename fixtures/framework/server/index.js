@@ -3,7 +3,7 @@ import helmet from "helmet";
 import bodyParser from "body-parser";
 import expressWinston from "express-winston";
 import winston from "winston";
-import { baseUrl, deployParamName } from "./helpers/constants";
+import constants from "./helpers/constants";
 import routes from "./api/v1/routes";
 import cors from "cors";
 import { fsUtil } from "blockapps-rest";
@@ -11,11 +11,14 @@ import config from "./load.config";
 
 const app = express();
 
+const { baseUrl, deployParamName } = constants;
+
 // Load deploy file
 const deploy = fsUtil.getYaml(config.deployFilename);
 if (!deploy) {
   throw new Error(`Deploy file '${config.deployFilename}' not found`);
 }
+
 app.set(deployParamName, deploy);
 
 // Setup middleware

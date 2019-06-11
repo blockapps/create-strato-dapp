@@ -25,7 +25,7 @@ This project requires an `ADMIN_TOKEN` env varibale for the deploy to work. This
 yarn token-getter
 ```
 
-This command launches a small web server on port 8000 and open a browser window. The user can now login with the admin credentials. Once logged in, the web server will display the token on a web page. This token can be copied in pasted into a `.env` file under the `<dir>/server` folder. Alternatively, it can be supplied as a runtime environment variable by setting the `ADMIN_TOKEN` environment variable when running `yarn start`.
+This command launches a small web server on port 8000 and open a browser window. The user can now login with the admin credentials. Once logged in, the web server will display the token on a web page. This token can be copied in pasted into a `.env` file under the `<dir>-server` folder. Alternatively, it can be supplied as a runtime environment variable by setting the `ADMIN_TOKEN` environment variable when running `yarn start`.
 
 ### Executing for development
 
@@ -33,7 +33,7 @@ This command launches a small web server on port 8000 and open a browser window.
 
 ```
 cd nginx-docker
-HOST_IP=$(ifconfig getifaddr en0) docker-compose up -d
+HOST_IP=$(ipconfig getifaddr en0) docker-compose up -d
 ```
 
 _NOTE:_ Your interface might be different. Replace `en0` with your network interface identifier.
@@ -44,7 +44,9 @@ Nginx acts as a proxy for the frontend and the backend. It is required so that b
 
 ```
 cd <dir>-server
+git submodule update --init --recursive
 yarn deploy
+yarn build
 yarn start
 ```
 
@@ -52,7 +54,8 @@ yarn start
 
 ```
 cd <dir>-ui
-yarn start
+yarn install
+yarn develop
 ```
 
 This should open a browser window which shows the current server time.

@@ -2,7 +2,7 @@ version: "2.1"
 services:
   <dir>-server:
     image: <dir>-server:latest
-    build: ./server
+    build: ./<dir>-server
     restart: always
     environment:
       - SERVER=${SERVER:-docker}
@@ -10,7 +10,7 @@ services:
     depends_on:
       - <dir>-server
     image: <dir>-ui:latest
-    build: ./ui
+    build: ./<dir>-ui
     restart: always
     environment:
       - NODE_ENV=${NODE_ENV:-production}
