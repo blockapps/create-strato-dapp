@@ -10,8 +10,10 @@
     "node": ">=8.10"
   },
   "dependencies": {
+    "blockapps-rest": "^7.4.0",
     "commander": "^2.19.0",
     "cross-spawn": "^6.0.5",
-    "fs-extra": "^7.0.1"
+    "fs-extra": "^7.0.1",
+    "inquirer": "^6.3.1"
   }
 }

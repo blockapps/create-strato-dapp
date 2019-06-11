@@ -3,6 +3,8 @@ const package = require("./package.json");
 const fs = require("fs-extra");
 const path = require("path");
 const spawn = require("cross-spawn");
+const inquirer = require("inquirer");
+const yaml = require("js-yaml");
 const log = console.log;
 const error = console.error;
 let directory;
@@ -29,6 +31,43 @@ if (typeof directory === "object") {
 const serverDirectory = `${directory}-server`;
 const uiDirectory = `${directory}-ui`;
 const nginxDirectory = "nginx-docker";
+const nodeHost = "localhost";
+let answers = {};
+
+async function collectOauthDetails() {
+  function validateNotEmpty(input) {
+    return input !== "";
+  }
+
+  const prompts = [
+    {
+      name: "appTokenCookieName",
+      default: `${directory}_session`
+    },
+    {
+      name: "clientId",
+      validate: validateNotEmpty
+    },
+    {
+      name: "clientSecret",
+      validate: validateNotEmpty
+    },
+    {
+      name: "openIdDiscoveryUrl",
+      validate: validateNotEmpty
+    },
+    {
+      name: "redirectUri",
+      default: `http://${nodeHost}/api/v1/authentication/callback`
+    },
+    {
+      name: "logoutRedirectUri",
+      default: `http://${nodeHost}`
+    }
+  ];
+
+  answers = await inquirer.prompt(prompts);
+}
 
 function printUsage(errMsg) {
   error(errMsg);
@@ -38,9 +77,13 @@ function printUsage(errMsg) {
   log(`   ${package.name} create my-strato-dapp`);
 }
 
-function run(dir) {
+async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
-  log(`Ensuring directory ${dir}...`);
+
+  log(`Collecting configuration parameters...`);
+  await collectOauthDetails();
+
+  log(`Checking directory ${dir}...`);
   fs.ensureDirSync(dir);
 
   let startDir = process.cwd();
@@ -65,7 +108,7 @@ function run(dir) {
   spawn.sync("yarn", ["init", "-yp"]);
 
   log(`\t\tInstalling server node modules...`);
-  spawn.sync("yarn", ["add", "blockapps-rest@alpha"]);
+  spawn.sync("yarn", ["add", "blockapps-rest@latest"]);
   spawn.sync("yarn", ["add", "express"]);
   spawn.sync("yarn", ["add", "helmet"]);
   spawn.sync("yarn", ["add", "body-parser"]);
@@ -76,31 +119,85 @@ function run(dir) {
   spawn.sync("yarn", ["add", "dotenv"]);
   spawn.sync("yarn", ["add", "mocha"]);
   spawn.sync("yarn", ["add", "cors"]);
+  spawn.sync("yarn", ["add", "jwt-decode"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/core"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/cli"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/node"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/preset-env"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/register"]);
 
-  log("\t\tInitializing blockapps-sol submodule");
-  spawn.sync("git", [
-    "submodule",
-    "add",
-    "https://github.com/blockapps/blockapps-sol#SER-25_compatibilityWithRest"
-  ]);
-
   log(`\t\tCopying server fixtures...`);
   fs.copySync(`${__dirname}/fixtures/framework/server/`, "./");
+
+  log("\t\tUpdating server configs...");
+  let localhostConfig = await yaml.safeLoad(
+    fs.readFileSync(`./config/localhost.config.yaml`, "utf8")
+  );
+
+  localhostConfig.nodes[0].oauth = {
+    appTokenCookieName: answers.appTokenCookieName,
+    scope: "email openid",
+    appTokenCookieMaxAge: 7776000000, // 90 days: 90 * 24 * 60 * 60 * 1000
+    clientId: answers.clientId,
+    clientSecret: answers.clientSecret,
+    openIdDiscoveryUrl: answers.openIdDiscoveryUrl,
+    redirectUri: answers.redirectUri,
+    logoutRedirectUri: answers.logoutRedirectUri
+  };
+
+  let tokenGetterConfig = JSON.parse(JSON.stringify(localhostConfig));
+  tokenGetterConfig.nodes[0].oauth.redirectUri =
+    "http://localhost:8000/callback";
+  tokenGetterConfig.nodes[0].oauth.logoutRedirectUri = "http://localhost:8000";
+
+  let dockerConfig = JSON.parse(JSON.stringify(localhostConfig));
+  dockerConfig.nodes[0].url = "http://nginx:80";
+  dockerConfig.deployFilename = "config/docker.deploy.yaml";
+
+  fs.writeFileSync(
+    `./config/localhost.config.yaml`,
+    await yaml.safeDump(localhostConfig)
+  );
+  fs.writeFileSync(
+    `./config/token-getter.config.yaml`,
+    await yaml.safeDump(tokenGetterConfig)
+  );
+  fs.writeFileSync(
+    `./config/docker.config.yaml`,
+    await yaml.safeDump(dockerConfig)
+  );
+
+  let serverDockerFile = fs.readFileSync("Dockerfile", "utf-8");
+  serverDockerFile = serverDockerFile.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("Dockerfile", serverDockerFile);
+
+  let serverDockerRun = fs.readFileSync("docker-run.sh", "utf-8");
+  serverDockerRun = serverDockerRun.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-run.sh", serverDockerRun);
 
   log(`\t\tUpdating server scripts...`);
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
+    "mocha-babel": "node_modules/.bin/mocha --require @babel/register",
+    "token-getter":
+      "node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --port ${PORT:-8000} --config config/${SERVER:-token-getter}.config.yaml",
     start: "babel-node index",
-    deploy: "mocha dapp/dapp/dapp.deploy.js -b",
+    deploy:
+      "cp config/${SERVER:-localhost}.config.yaml config.yaml && yarn mocha-babel dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
     build: "cd blockapps-sol && yarn install && yarn build && cd .."
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
+
+  log("\t\tInitializing blockapps-sol submodule");
+  spawn.sync("git", [
+    "submodule",
+    "add",
+    "-b",
+    "SER-25_compatibilityWithRest",
+    "https://github.com/blockapps/blockapps-sol"
+  ]);
+  spawn.sync("yarn", ["build"]);
 
   process.chdir(`${startDir}/${dir}`);
 
@@ -130,13 +227,61 @@ function run(dir) {
   const uiPackage = JSON.parse(uiPackageJson);
   uiPackage.scripts = {
     ...uiPackage.scripts,
-    develop: "REACT_APP_URL=http://localhost:3030 yarn start"
+    develop: "REACT_APP_URL=http://localhost yarn start"
   };
   fs.writeFileSync("package.json", JSON.stringify(uiPackage, null, 2));
 
+  let uiDockerFile = fs.readFileSync("Dockerfile", "utf-8");
+  uiDockerFile = uiDockerFile.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("Dockerfile", uiDockerFile);
+
+  let uiDockerRun = fs.readFileSync("docker-run.sh", "utf-8");
+  uiDockerRun = uiDockerRun.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-run.sh", uiDockerRun);
+
   process.chdir(`${startDir}/${dir}`);
 
-  // TODO: dockerize
+  log(`\t\tSetting up docker`);
+
+  process.chdir(`${nginxDirectory}`);
+  fs.copySync(`${__dirname}/fixtures/framework/nginx-docker/`, "./");
+
+  let nginxDockerCompose = fs.readFileSync("docker-compose.yml", "utf-8");
+  nginxDockerCompose = nginxDockerCompose.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-compose.yml", nginxDockerCompose);
+
+  let nginxNoSslDocker = fs.readFileSync("nginx-nossl-docker.conf", "utf-8");
+  nginxNoSslDocker = nginxNoSslDocker.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("nginx-nossl-docker.conf", nginxNoSslDocker);
+
+  let nginxSslDocker = fs.readFileSync("nginx-ssl-docker.conf", "utf-8");
+  nginxSslDocker = nginxSslDocker.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("nginx-ssl-docker.conf", nginxSslDocker);
+
+  process.chdir(`${startDir}/${dir}`);
+
+  fs.copyFileSync(
+    `${__dirname}/fixtures/framework/docker-compose.yml`,
+    "docker-compose.yml"
+  );
+  fs.copyFileSync(
+    `${__dirname}/fixtures/framework/.dockerignore`,
+    ".dockerignore"
+  );
+
+  let dockerCompose = fs.readFileSync("docker-compose.yml", "utf-8");
+  dockerCompose = dockerCompose.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("docker-compose.yml", dockerCompose);
+
+  log(`\t\tUpdating README`);
+  fs.copyFileSync(`${__dirname}/fixtures/framework/README.md`, "README.md");
+
+  let readme = fs.readFileSync("README.md", "utf-8");
+  readme = readme.replace(/<dir>/g, `${dir}`);
+  readme = readme.replace(/<client-id>/g, `${answers.clientId}`);
+  readme = readme.replace(/<client-secret>/g, `${answers.clientSecret}`);
+  readme = readme.replace(/<discovery-url>/g, `${answers.openIdDiscoveryUrl}`);
+  fs.writeFileSync("README.md", readme);
 
   // TODO: Print usage instructions
   log("Happy BUIDLing!");

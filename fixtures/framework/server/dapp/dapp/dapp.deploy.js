@@ -2,7 +2,7 @@ import { assert } from "chai";
 import config from "../../load.config";
 import dappJs from "./dapp";
 import dotenv from "dotenv";
-import oauthHelper from "../../helpers/oauth";
+import oauthHelper from "../../helpers/oauthHelper";
 import RestStatus from "http-status-codes";
 
 const loadEnv = dotenv.config();

@@ -4,9 +4,9 @@ let config;
 
 if (!config) {
   config = fsUtil.getYaml(
-    `config/${
-      process.env.SERVER ? process.env.SERVER : "localhost"
-    }.config.yaml`
+    process.env.SERVER
+      ? `config/${process.env.SERVER}.config.yaml`
+      : `config.yaml`
   );
 }
 
