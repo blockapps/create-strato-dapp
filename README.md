@@ -1,4 +1,4 @@
-# strato-dapp
+# app-framework
 
 This utility instantiates a STRATO application. It performs the following steps
 
