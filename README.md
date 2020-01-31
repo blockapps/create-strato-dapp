@@ -18,7 +18,7 @@ The following tools should already be installed
 Clone the repository. From outside the repository folder, run
 
 ```
-node <repository>/index.js create <project-name>
+node app-framework/index.js create <project-name>
 ```
 
 The above command prompts the user for OAuth details, creates a directory with `<project-name>` and initializes the STRATO app. After a project has been initialized, please look at the project `README` for instructions on how to execute the project.

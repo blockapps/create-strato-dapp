@@ -22,7 +22,8 @@ OAUTH_ENABLED=true OAUTH_CLIENT_ID=<client-id> OAUTH_CLIENT_SECRET=<client-secre
 This project requires an `ADMIN_TOKEN` env varibale for the deploy to work. This token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. This utility can be executed by running the following command:
 
 ```
-yarn token-getter
+cd <project_name>-server
+sudo yarn token-getter
 ```
 
 This command launches a small web server on port 8000 and open a browser window. The user can now login with the admin credentials. Once logged in, the web server will display the token on a web page. This token can be copied in pasted into a `.env` file under the `<dir>-server` folder. Alternatively, it can be supplied as a runtime environment variable by setting the `ADMIN_TOKEN` environment variable when running `yarn start`.

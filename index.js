@@ -145,11 +145,6 @@ async function run(dir) {
     logoutRedirectUri: answers.logoutRedirectUri
   };
 
-  let tokenGetterConfig = JSON.parse(JSON.stringify(localhostConfig));
-  tokenGetterConfig.nodes[0].oauth.redirectUri =
-    "http://localhost:8000/callback";
-  tokenGetterConfig.nodes[0].oauth.logoutRedirectUri = "http://localhost:8000";
-
   let dockerConfig = JSON.parse(JSON.stringify(localhostConfig));
   dockerConfig.nodes[0].url = "http://nginx:80";
   dockerConfig.deployFilename = "config/docker.deploy.yaml";
@@ -157,10 +152,6 @@ async function run(dir) {
   fs.writeFileSync(
     `./config/localhost.config.yaml`,
     await yaml.safeDump(localhostConfig)
-  );
-  fs.writeFileSync(
-    `./config/token-getter.config.yaml`,
-    await yaml.safeDump(tokenGetterConfig)
   );
   fs.writeFileSync(
     `./config/docker.config.yaml`,
@@ -179,12 +170,11 @@ async function run(dir) {
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
-    "mocha-babel": "node_modules/.bin/mocha --require @babel/register",
     "token-getter":
-      "node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --port ${PORT:-8000} --config config/${SERVER:-token-getter}.config.yaml",
+      "node --require @babel/register node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     deploy:
-      "cp config/${SERVER:-localhost}.config.yaml config.yaml && yarn mocha-babel dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
+      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
     build: "cd blockapps-sol && yarn install && yarn build && cd .."
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
