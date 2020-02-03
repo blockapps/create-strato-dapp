@@ -193,7 +193,7 @@ async function run(dir) {
 
   log(`\tSetting up UI`);
   log(`\t\tInitializing create-react-app...`);
-  spawn.sync("create-react-app", [uiDirectory]);
+  spawn.sync("npx create-react-app", [uiDirectory]);
 
   log(`\t\tInstalling ui node modules...`);
   process.chdir(uiDirectory);
