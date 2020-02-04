@@ -9,60 +9,77 @@ The following tools should already be installed
 1. docker
 2. docker-compose
 
-### Starting STRATO
-
-Start STRATO using the following environment variables
-
-```
-OAUTH_ENABLED=true OAUTH_CLIENT_ID=<client-id> OAUTH_CLIENT_SECRET=<client-secret> OAUTH_DISCOVERY_URL=<discovery-url> OAUTH_JWT_USERNAME_PROPERTY=email HTTP_PORT=8080 NODE_HOST=localhost:8080 ./strato.sh --single
-```
 
 ### Obtaining an ADMIN TOKEN
 
-This project requires an `ADMIN_TOKEN` env varibale for the deploy to work. This token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. This utility can be executed by running the following command:
+This project requires an `ADMIN_TOKEN` environment varibale for the app deployment to work. This token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. To execute this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
 
 ```
-cd <project_name>-server
+cd <dir>/<dir>-server
 sudo yarn token-getter
 ```
 
-This command launches a small web server on port 8000 and open a browser window. The user can now login with the admin credentials. Once logged in, the web server will display the token on a web page. This token can be copied in pasted into a `.env` file under the `<dir>-server` folder. Alternatively, it can be supplied as a runtime environment variable by setting the `ADMIN_TOKEN` environment variable when running `yarn start`.
+This command launches a small web server on port 80. 
+- In your brower, go to `http://localhost`
+- Log in with your openID credentials
+- Once logged in, the web server will display the token on a web page. 
+- Copy the "Access Token".
+- Hit `CTRL+C` to quit the `token-getter`.
+- Paste the token into the `.env` file under the `<dir>-server` folder, and label it as the environment variable `ADMIN_TOKEN`. Example:
+```
+ADMIN_TOKEN=eyJhbGci.....
+```
 
-### Executing for development
+
+### Executing for Development
 
 #### Start nginx
 
 ```
-cd nginx-docker
-HOST_IP=$(ipconfig getifaddr en0) docker-compose up -d
+cd <dir>/nginx-docker
+HOST_IP=$(curl ifconfig.me) docker-compose up -d
 ```
 
-_NOTE:_ Your interface might be different. Replace `en0` with your network interface identifier.
 
 Nginx acts as a proxy for the frontend and the backend. It is required so that both the frontend and the backend have the same root URL (required for authentication).
 
-#### Deploy the app and start backend
+#### Deploy the Dapp and Start The Backend
 
 ```
-cd <dir>-server
+cd <dir>/<dir>-server
 git submodule update --init --recursive
 yarn deploy
 yarn build
 yarn start
 ```
 
+*NOTE: `yarn start` will start the server and use the terminal window to dump log information. To stop the server, hit `CTRL+C`*.
+
+
+
 #### Launch UI
 
+In a new terminal window, run the following commands:
+
 ```
-cd <dir>-ui
+cd <dir>/<dir>-ui
 yarn install
 yarn develop
 ```
 
-This should open a browser window which shows the current server time.
+This should open a browser window and display a basic React webpage.
 
-### Executing for deployment
+*NOTE: `yarn develop` will start the UI and use the terminal window to dump log information. To stop the UI, hit `CTRL+C`*.
 
+#### Stopping the App
+
+To stop the app, hit `CTRL+C` on the server and UI windows. To stop the nginx server, run
 ```
-docker-compose up -d
+docker stop nginx-docker_nginx_1
 ```
+
+You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, as the `token-getter` utility lauches a web server on the same port. 
+
+
+
+

@@ -31,15 +31,21 @@ if (typeof directory === "object") {
 const serverDirectory = `${directory}-server`;
 const uiDirectory = `${directory}-ui`;
 const nginxDirectory = "nginx-docker";
-const nodeHost = "localhost";
+
+
 let answers = {};
 
-async function collectOauthDetails() {
+async function collectNodeDetails() {
   function validateNotEmpty(input) {
     return input !== "";
   }
 
   const prompts = [
+    {
+      message: "Your STRATO node's URL (including the http://)",
+      name: "stratoNodeURL",
+      validate: validateNotEmpty
+    },
     {
       name: "appTokenCookieName",
       default: `${directory}_session`
@@ -58,11 +64,11 @@ async function collectOauthDetails() {
     },
     {
       name: "redirectUri",
-      default: `http://${nodeHost}/api/v1/authentication/callback`
+      default: `http://localhost/api/v1/authentication/callback`
     },
     {
       name: "logoutRedirectUri",
-      default: `http://${nodeHost}`
+      default: `http://localhost`
     }
   ];
 
@@ -80,8 +86,8 @@ function printUsage(errMsg) {
 async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
 
-  log(`Collecting configuration parameters...`);
-  await collectOauthDetails();
+  log(`Please enter the following configuration parameters:`);
+  await collectNodeDetails();
 
   log(`Checking directory ${dir}...`);
   fs.ensureDirSync(dir);
@@ -145,6 +151,8 @@ async function run(dir) {
     logoutRedirectUri: answers.logoutRedirectUri
   };
 
+  localhostConfig.nodes[0].url = answers.stratoNodeURL;
+
   let dockerConfig = JSON.parse(JSON.stringify(localhostConfig));
   dockerConfig.nodes[0].url = "http://nginx:80";
   dockerConfig.deployFilename = "config/docker.deploy.yaml";
@@ -193,7 +201,7 @@ async function run(dir) {
 
   log(`\tSetting up UI`);
   log(`\t\tInitializing create-react-app...`);
-  spawn.sync("npx create-react-app", [uiDirectory]);
+  spawn.sync("npx", ["create-react-app", uiDirectory]);
 
   log(`\t\tInstalling ui node modules...`);
   process.chdir(uiDirectory);
@@ -274,7 +282,7 @@ async function run(dir) {
   fs.writeFileSync("README.md", readme);
 
   // TODO: Print usage instructions
-  log("Happy BUIDLing!");
+  log("Happy Building! :) ");
 }
 
 run(directory);

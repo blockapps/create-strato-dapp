@@ -15,20 +15,27 @@ The following tools should already be installed
 2. yarn
 
 ## Usage
-Clone the repository. From outside the repository folder, run
+1. Clone the repository.
+``` 
+git clone https://github.com/blockapps/app-framework.git
+```
+
+2. From **outside** the repository folder, run the following command:
 
 ```
 node app-framework/index.js create <project-name>
 ```
 
-The above command prompts the user for OAuth details, creates a directory with `<project-name>` and initializes the STRATO app. After a project has been initialized, please look at the project `README` for instructions on how to execute the project.
+3. Input your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
+
+4. When you have answered all of the prompts, the script will execute (it may take a couple of minutes). It will create the directory `<project-name>`, and initialize the STRATO dapp. After it finishes, enter the project directory and follow the included `README` for further instructions on executing the app.
+
 
 ## Assumptions
 
 This utility makes the following assumptions:
 
-1. STRATO is executing on localhost on port 8080
-2. The application will execute on port 80 on `localhost`
-3. STRATO is being executed with `OAUTH_ENABLED` and user has OAuth details for the relevant identity server
+1. The application will execute on port 80 on `localhost`
+2. STRATO is being executed with `OAUTH_ENABLED` and the user has OAuth details for the relevant identity server
 
 It is possible to setup the application for a different environment by modifying the config that is generated under `project-name-server/config` directory.
