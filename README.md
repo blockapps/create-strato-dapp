@@ -26,7 +26,7 @@ git clone https://github.com/blockapps/app-framework.git
 node app-framework/index.js create <project-name>
 ```
 
-3. Input your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
+3. Enter your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
 
 4. When you have answered all of the prompts, the script will execute (it may take a couple of minutes). It will create the directory `<project-name>`, and initialize the STRATO dapp. After it finishes, enter the project directory and follow the included `README` for further instructions on executing the app.
 
