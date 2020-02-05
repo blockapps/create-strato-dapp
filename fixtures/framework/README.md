@@ -19,9 +19,9 @@ cd <dir>/<dir>-server
 sudo yarn token-getter
 ```
 
-This command launches a small web server on port 80. 
-- In your brower, go to `http://localhost`
-- Log in with your openID credentials
+This command launches a small web server on the same host (hostname and port) specified in the `redirectUri` field of `config/localhost.config.yaml`. This field was filled in by the app-framework utility from the configuration parameters it collected from the user.
+- Copy the URL shown by the `token-getter` utility and enter it into your browser.
+- Log in with your openID credentials.
 - Once logged in, the web server will display the token on a web page. 
 - Copy the "Access Token".
 - Hit `CTRL+C` to quit the `token-getter`.
@@ -37,8 +37,18 @@ ADMIN_TOKEN=eyJhbGci.....
 
 ```
 cd <dir>/nginx-docker
-HOST_IP=$(curl ifconfig.me) docker-compose up -d
 ```
+
+If you are running on Linux, execute the following command:
+```
+HOST_IP=172.17.0.1 docker-compose up -d
+```
+
+If you are running on Mac, execute the following command:
+```
+HOST_IP=docker.for.mac.localhost docker-compose up -d
+```
+
 
 
 Nginx acts as a proxy for the frontend and the backend. It is required so that both the frontend and the backend have the same root URL (required for authentication).
