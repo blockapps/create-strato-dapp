@@ -282,7 +282,7 @@ async function run(dir) {
   fs.writeFileSync("README.md", readme);
 
   // TODO: Print usage instructions
-  log("Happy Building! :) ");
+  log("Happy BUIDLing! :) ");
 }
 
 run(directory);
