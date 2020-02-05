@@ -1,6 +1,6 @@
 {
   "name": "app-framework",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Configuration and framework for STRATO DApps",
   "main": "index.js",
   "repository": "https://github.com/blockapps/app-framework",
