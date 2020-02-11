@@ -42,7 +42,7 @@ async function collectNodeDetails() {
 
   const prompts = [
     {
-      message: "Your STRATO node's URL (including the http://)",
+      message: "Your STRATO node's URL (including http:// and port number):",
       name: "stratoNodeURL",
       validate: validateNotEmpty
     },
@@ -86,7 +86,10 @@ function printUsage(errMsg) {
 async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
 
-  log(`Please enter the following configuration parameters:`);
+  log(`Welcome to the STRATO app-framework utility.`);
+  log(`This tool will generate a basic framework for an application built on STRATO,`);
+  log(`including a React UI and a NodeJS server, integrated with Blockapps-Rest SDK.`);
+  log(`\nPlease enter the following configuration parameters (contact Blockapps for credentials):\n`);
   await collectNodeDetails();
 
   log(`Checking directory ${dir}...`);
@@ -282,6 +285,8 @@ async function run(dir) {
   fs.writeFileSync("README.md", readme);
 
   // TODO: Print usage instructions
+  log(`Done\n`);
+  log(`Enter the ${directory} directory to get started`);
   log("Happy BUIDLing! :) ");
 }
 
