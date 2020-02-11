@@ -38,4 +38,4 @@ This utility makes the following assumptions:
 1. The application will execute on `localhost`
 2. STRATO is running on a remote node with `OAUTH_ENABLED` and the user has OAuth details for the relevant identity server
 
-It is possible to setup the application for a different environment by modifying the config that is generated at `project-name-server/config/localhost.config.yaml` directory.
+It is possible to set up the application for a different environment by modifying the config that is generated at `project-name-server/config/localhost.config.yaml`.
