@@ -12,7 +12,7 @@ The following tools should already be installed
 
 ### Obtaining an ADMIN TOKEN
 
-This project requires an `ADMIN_TOKEN` environment varibale for the app deployment to work. This token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. To execute this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
+This project requires an `ADMIN_TOKEN` environment variable for the app deployment to work. This token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. To execute this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
 
 ```
 cd <dir>/<dir>-server
@@ -88,7 +88,7 @@ To stop the app, hit `CTRL+C` on the server and UI windows. To stop the nginx se
 docker stop nginx-docker_nginx_1
 ```
 
-You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, as the `token-getter` utility lauches a web server on the same port. 
+You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, as the `token-getter` utility launches a web server on the same port. 
 
 
 
