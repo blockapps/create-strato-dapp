@@ -259,13 +259,9 @@ async function run(dir) {
   nginxDockerCompose = nginxDockerCompose.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("docker-compose.yml", nginxDockerCompose);
 
-  let nginxNoSslDocker = fs.readFileSync("nginx-nossl-docker.conf", "utf-8");
-  nginxNoSslDocker = nginxNoSslDocker.replace(/<dir>/g, `${dir}`);
-  fs.writeFileSync("nginx-nossl-docker.conf", nginxNoSslDocker);
-
-  let nginxSslDocker = fs.readFileSync("nginx-ssl-docker.conf", "utf-8");
-  nginxSslDocker = nginxSslDocker.replace(/<dir>/g, `${dir}`);
-  fs.writeFileSync("nginx-ssl-docker.conf", nginxSslDocker);
+  let nginxConfig = fs.readFileSync("nginx.tpl.conf", "utf-8");
+  nginxConfig = nginxConfig.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("nginx.tpl.conf", nginxConfig);
 
   process.chdir(`${startDir}/${dir}`);
 
