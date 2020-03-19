@@ -1,4 +1,9 @@
-version: "2.1"
+version: "3"
+volumes:
+  config:
+    driver: local
+  logs:
+    driver: local
 services:
   <dir>-server:
     image: <dir>-server:latest
@@ -6,6 +11,14 @@ services:
     restart: always
     environment:
       - SERVER=${SERVER:-docker}
+    volumes:
+      - config:/config:rw
+      - logs:/usr/src/<dir>-server/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
   <dir>-ui:
     depends_on:
       - <dir>-server
@@ -14,9 +27,15 @@ services:
     restart: always
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-  <dir>-nginx:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+  nginx:
     depends_on:
       - <dir>-ui
+      - <dir>-server
     image: <dir>-nginx:latest
     build: ./nginx-docker
     restart: always
@@ -28,7 +47,12 @@ services:
     environment:
       - SSL=${SSL:-false}
       - SSL_CERT_TYPE=${SSL_CERT_TYPE:-crt}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
 networks:
   default:
     external:
-      name: strato_default
+      name: strato_static
