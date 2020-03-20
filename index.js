@@ -192,6 +192,7 @@ async function run(dir) {
     "token-getter":
       "node --require @babel/register node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
+    "start:prod": "NODE_ENV=production babel-node index",
     deploy:
       "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
     build: "cd blockapps-sol && yarn install && yarn build && cd .."

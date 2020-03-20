@@ -10,7 +10,28 @@ services:
     build: ./<dir>-server
     restart: always
     environment:
-      - SERVER=${SERVER:-docker}
+      - IS_BOOTNODE=${IS_BOOTNODE:-false}
+      - API_DEBUG=${API_DEBUG:-false}
+      - CONFIG_DIR_PATH=/config
+      - DEPLOY_FILE_NAME=${DEPLOY_FILE_NAME:-beanstalk.deploy.yaml}
+      - NETWORK_CONFIG_FILE_NAME=${NETWORK_CONFIG_FILE_NAME:-beanstalk.network-config.yaml}
+      - APPLICATION_USER_NAME=${APPLICATION_USER_NAME:-APP_USER}
+      - SERVER_HOST=${SERVER_HOST}
+      - SERVER_IP=${SERVER_IP}
+      - NODE_LABEL=${NODE_LABEL}
+      - STRATO_NODE_PROTOCOL=${STRATO_NODE_PROTOCOL:-http}
+      - STRATO_NODE_HOST=${STRATO_NODE_HOST:-strato_nginx_1:80}
+      - STRATO_LOCAL_IP=${STRATO_LOCAL_IP:-} # Non-empty value will create /etc/hosts record in container to resolve hostname provided in STRATO_HOST to STRATO_LOCAL_IP. Example: `172.17.0.1` (docker0 IP of machine - see `ifconfig`). Otherwise - will resolve hostname with public DNS (check STRATO port in Security Group).
+      - NODE_PUBLIC_KEY=${NODE_PUBLIC_KEY:-6d8a80d14311c39f35f516fa664deaaaa13e85b2f7493f37f6144d86991ec012937307647bd3b9a82abe2974e1407241d54947bbb39763a4cac9f77166ad92a0}
+      - OAUTH_APP_TOKEN_COOKIE_NAME=${OAUTH_APP_TOKEN_COOKIE_NAME:-beanstalk_session}
+      - OAUTH_OPENID_DISCOVERY_URL=${OAUTH_OPENID_DISCOVERY_URL}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_SCOPE=${OAUTH_SCOPE:-email openid}
+      - OAUTH_SERVICE_OAUTH_FLOW=${OAUTH_SERVICE_OAUTH_FLOW:-client-credential}
+      - OAUTH_TOKEN_FIELD=${OAUTH_TOKEN_FIELD:-access_token}
+      - OAUTH_TOKEN_USERNAME_PROPERTY=${OAUTH_TOKEN_USERNAME_PROPERTY:-email}
+      - OAUTH_TOKEN_USERNAME_PROPERTY_SERVICE_FLOW=${OAUTH_TOKEN_USERNAME_PROPERTY_SERVICE_FLOW:-email}
     volumes:
       - config:/config:rw
       - logs:/usr/src/<dir>-server/logs
