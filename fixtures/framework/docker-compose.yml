@@ -14,7 +14,6 @@ services:
       - API_DEBUG=${API_DEBUG:-false}
       - CONFIG_DIR_PATH=/config
       - DEPLOY_FILE_NAME=${DEPLOY_FILE_NAME:-<dir>.deploy.yaml}
-      - NETWORK_CONFIG_FILE_NAME=${NETWORK_CONFIG_FILE_NAME:-<dir>.network-config.yaml}
       - APPLICATION_USER_NAME=${APPLICATION_USER_NAME:-APP_USER}
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_IP=${SERVER_IP}
@@ -61,13 +60,27 @@ services:
     build: ./nginx-docker
     restart: always
     ports:
-      - 80:80
+      # we do not map port 80 because it is mapped by http-redirect container which we can stop temporarily for letsencrypt cert renewal without app downtime
+      #- 80:80
       - 443:443
     volumes:
       - ./nginx-docker/ssl:/tmp/ssl:ro
     environment:
       - SSL=${SSL:-false}
       - SSL_CERT_TYPE=${SSL_CERT_TYPE:-crt}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+  http-redirect:
+    depends_on:
+      - nginx
+    image: <dir>-http-redirect:latest
+    build: ./nginx-docker/redirect-http-to-https
+    restart: always
+    ports:
+      - 80:80
     logging:
       driver: "json-file"
       options:

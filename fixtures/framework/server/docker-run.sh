@@ -82,7 +82,6 @@ if [ ! -f "${CONFIG_DIR_PATH}/config.yaml" ]; then
   
   sed -i 's*<apiDebug_value>*'"${API_DEBUG}"'*g' /tmp/tmp.config.yaml
   sed -i 's*<deployFilename_value>*'"${CONFIG_DIR_PATH}/${DEPLOY_FILE_NAME}"'*g' /tmp/tmp.config.yaml # config.yaml expects the path, not filename
-  sed -i 's*<networkConfigFile_value>*'"${CONFIG_DIR_PATH}/${NETWORK_CONFIG_FILE_NAME}"'*g' /tmp/tmp.config.yaml # config.yaml expects the path, not filename
   sed -i 's*<applicationUserName_value>*'"${APPLICATION_USER_NAME}"'*g' /tmp/tmp.config.yaml
   sed -i 's*<serverHost_value>*'"${SERVER_HOST}"'*g' /tmp/tmp.config.yaml
   sed -i 's*<serverIP_value>*'"${SERVER_IP}"'*g' /tmp/tmp.config.yaml

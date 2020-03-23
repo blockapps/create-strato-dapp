@@ -4,7 +4,6 @@ timeout: 600000
 dappPath: dapp
 VM: SolidVM
 deployFilename: <deployFilename_value>
-networkConfigFile: <networkConfigFile_value>
 applicationUserName: <applicationUserName_value>
 restVersion: 7
 serverHost: <serverHost_value>

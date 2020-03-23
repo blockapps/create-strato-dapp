@@ -194,7 +194,7 @@ async function run(dir) {
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
-      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
+      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
     build: "cd blockapps-sol && yarn install && yarn build && cd .."
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
@@ -264,6 +264,10 @@ async function run(dir) {
   nginxConfig = nginxConfig.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("nginx.tpl.conf", nginxConfig);
 
+  let letsenryptRenewTool = fs.readFileSync("letsencrypt/renew-ssl-cert.sh", "utf-8");
+  letsenryptRenewTool = letsenryptRenewTool.replace(/<dir>/g, `${dir}`);
+  fs.writeFileSync("letsencrypt/renew-ssl-cert.sh", letsenryptRenewTool);
+  
   process.chdir(`${startDir}/${dir}`);
 
   fs.copyFileSync(

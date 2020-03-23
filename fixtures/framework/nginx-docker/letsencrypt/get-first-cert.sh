@@ -16,7 +16,7 @@ if [[ "${DRY_RUN}" = "true" ]]; then
   echo "DRY_RUN is set to true - will do the dry run (staging) - for test or debugging."
   DRY_RUN_STRING="--dry-run"
 else
-  echo "DRY_RUN is NOT set to true - will execute the PRODUCTION cert request (rate limit of 5 certs/day)"
+  echo "DRY_RUN is NOT set to true - will execute the PRODUCTION cert request (rate limit of 5 certs/week/host)"
   DRY_RUN_STRING=""
 fi
 
@@ -58,9 +58,11 @@ else
   echo "Cert path: ${cert_path}"
   echo "Key path: ${key_path}"
   echo "(use sudo to access)"
-  
-  echo "Example commands to copy to nginx ssl dir:"
+  printf "\n\n"
+  echo "Example commands to copy to project's nginx AND STRATO Getting Started (optional) ssl directories. Feel free to copy all 4 lines and execute in one paste:"
   echo "sudo cp ${cert_path} ../ssl/server.pem"
   echo "sudo cp ${key_path} ../ssl/server.key"
+  echo "sudo cp ${cert_path} ../../../strato-getting-started/ssl/certs/server.pem"
+  echo "sudo cp ${key_path} ../../../strato-getting-started/ssl/private/server.key"
   printf "\n\n"
 fi
