@@ -8,11 +8,19 @@ The following tools should already be installed
 
 1. docker
 2. docker-compose
+3. NodeJS 10+ (for development mode only)
+4. yarn (npm) (for development mode only)
 
+### Run <dir> app locally (for development)
 
-### Obtaining an ADMIN TOKEN
+#### Obtaining OAuth access token
 
-This project requires an `ADMIN_TOKEN` environment variable for the app deployment to work. This token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. To execute this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
+This project requires an OAuth access token provided as `ADMIN_TOKEN` environment variable in order for the app deployment to succeed. 
+
+*NOTE:* the <dir>/<dir>-server/dapp/dapp/dapp.deploy.js may be changed in the way to obtain the service user's access token from OAuth provider programmatically in the code. In that case the token-getter is not required
+
+The token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. 
+To use this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
 
 ```
 cd <dir>/<dir>-server
@@ -29,9 +37,6 @@ This command launches a small web server on the same host (hostname and port) sp
 ```
 ADMIN_TOKEN=eyJhbGci.....
 ```
-
-
-### Executing for Development
 
 #### Start nginx
 
@@ -58,8 +63,18 @@ Nginx acts as a proxy for the frontend and the backend. It is required so that b
 ```
 cd <dir>/<dir>-server
 git submodule update --init --recursive
-yarn deploy
+yarn install
 yarn build
+```
+
+Deploy contracts:
+```
+SERVER=localhost yarn deploy
+# SERVER var can be skipped as `localhost` is the default config name used
+```
+
+Start the backend server:
+```
 yarn start
 ```
 
@@ -79,6 +94,10 @@ yarn develop
 
 This should open a browser window and display a basic React webpage.
 
+*NOTE: Please make sure that `nginx` is up WITH CORRECT HOST_IP (see above).*
+
+*NOTE: Your IP address may change if you change the WIFI or in other reasons. In that case restart nginx container with actual HOST_IP.*
+
 *NOTE: `yarn develop` will start the UI and use the terminal window to dump log information. To stop the UI, hit `CTRL+C`*.
 
 #### Stopping the App
@@ -92,4 +111,107 @@ You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, a
 
 
 
+
+### Run <dir> app in Docker (the production way)
+
+#### 1. Build docker images
+```
+git submodule update --init --recursive --remote
+sudo docker-compose build
+```
+
+#### 2a. Run as <dir> bootnode (main node in multi-node environment)
+1. Example command to run locally in docker:
+    ```
+    #!/bin/bash
+    set -e
+    
+    export IS_BOOTNODE=true
+    export API_DEBUG=true
+    export SERVER_HOST=http://<your external IP address> # can't use 127.0.0.1
+    export SERVER_IP=<your external IP address> # can't use 127.0.0.1
+    export OAUTH_OPENID_DISCOVERY_URL=https://<oauth provider url>/.well-known/openid-configuration
+    export OAUTH_CLIENT_ID=<oauth provider client id>
+    export OAUTH_CLIENT_SECRET=<oauth provider client secret>
+    export NODE_LABEL='My boot node'
+
+    docker-compose up -d
+    ```
+   (For additional parameters, see "docker-compose.yml env vars reference" below)
+   
+2. Wait for all docker containers to become healthy (`sudo docker ps`)
+
+
+#### 2b. Run as app secondary node (in multi-node environment)
+Secondary node is the one that connects to the existing Dapp contract on the blockchain (which is initially deployed on app bootnode)
+
+1. On bootnode - Get deploy file content:
+    ```
+    sudo docker exec <dir>_backend_1 cat /config/<dir>.deploy.yaml
+    ```
+2. On secondary node - create docker volume and add the same <dir>.deploy.yaml file using commands:
+    ```
+    sudo su
+    docker volume create <dir>_config
+    APP_CONFIG_VOLUME_DIR=$(docker volume inspect --format '{{ .Mountpoint }}' <dir>_config)
+    nano ${APP_CONFIG_VOLUME_DIR}/<dir>.deploy.yaml
+    # paste content and save
+    exit
+    ```
+3. Run application:
+    ```
+    #!/bin/bash
+    set -e
+    
+    export API_DEBUG=true
+        export SERVER_HOST=http://<your external IP address> # can't use 127.0.0.1
+        export SERVER_IP=<your external IP address> # can't use 127.0.0.1
+        export OAUTH_OPENID_DISCOVERY_URL=https://<oauth provider url>/.well-known/openid-configuration
+        export OAUTH_CLIENT_ID=<oauth provider client id>
+        export OAUTH_CLIENT_SECRET=<oauth provider client secret>
+        export NODE_LABEL='My secondary node'
+    
+    docker-compose up -d
+    ```
+    (notice the IS_BOOTNODE and NODE_LABEL changes compared to bootnode's script from (2a))
+
+
+
+#### docker-compose.yml env vars reference
+Some docker-compose vars are optional with default values and some are required for prod or specific OAuth provider setup.
+
+```
+IS_BOOTNODE                 - (default: 'false') if false - .deploy.yaml is expected in docker volume
+API_DEBUG                   - (default: 'false') show additional logs of STRATO API calls in backend container log
+CONFIG_DIR_PATH             - (default: '/config') directory inside of container to keep the config file. Not recommended to change unless you know what you are doing.
+DEPLOY_FILE_NAME            - (default: '<dir>.deploy.yaml') filename of the targeted deploy file. Not recommended to change unless you know what you are doing.
+APPLICATION_USER_NAME       - (default: 'APP_USER') the username of service user
+SERVER_HOST                 - (required) protocol and host (protocol://hostname:port, e.g. https://example.com) of the application server
+SERVER_IP                   - (required) IP address of the machine (preferably public one or the private that is accessible from other nodes in network)
+NODE_LABEL                  - (required) String representing the node identificator (e.g. <dir>-node1)
+STRATO_NODE_PROTOCOL        - (default: 'http') Protocol of the STRATO node (http|https)
+STRATO_NODE_HOST            - (default: 'strato_nginx_1:80') host (hostname:port) of the STRATO node. By default - call STRATO node in the linked docker network (see bottom of docker-compose.yml)
+STRATO_LOCAL_IP             - (default: empty string, optional) Useful for Prod when STRATO is running on https and we have to call it by real DNS name (SSL requirement) but need to resolve it through the local network (e.g. STRATO port is closed to the world). Non-empty value will create /etc/hosts record in container to resolve hostname provided in STRATO_HOST to STRATO_LOCAL_IP. Example: `172.17.0.1` (docker0 IP of machine - see `ifconfig`). Otherwise - will resolve hostname with public DNS. 
+NODE_PUBLIC_KEY             - (default: dummy hex public key) STRATO node's blockstanbul public key
+OAUTH_APP_TOKEN_COOKIE_NAME - (default: '<dir>_session') Browser session cookie name for the node, e.g. <dir>-node1-session'
+OAUTH_OPENID_DISCOVERY_URL  - (required) OpenID discovery .well-known link
+OAUTH_CLIENT_ID             - (required) OAuth client id (Client should have the redirect uri `/api/v1/authentication/callback` set up on OAuth provider)
+OAUTH_CLIENT_SECRET         - (required) OAuth client secret
+OAUTH_SCOPE                 - (default: 'openid email') - custom OAuth scope (e.g. for Azure AD v2.0 authentication: 'openid offline_access <client_secret>/.default')
+OAUTH_SERVICE_OAUTH_FLOW    - (default: 'client-credential') - OAuth flow to use for programmatic token fetch (refer to blockapps-rest options)
+OAUTH_TOKEN_FIELD           - (default: 'access_token') - value of the service flow response to use as access token (e.g. 'access_token'|'id_token')
+OAUTH_TOKEN_USERNAME_PROPERTY               - (default: 'email') - OAuth access token's property to use as user identifier in authorization code grant flow (e.g. 'email' for Keycloak, 'upn' for Azure AD)
+OAUTH_TOKEN_USERNAME_PROPERTY_SERVICE_FLOW  - (default: 'email') - OAuth access token's property to use as user identifier in oauth service (e.g. client-credential) flow (e.g. 'email for Keycloak, 'oid' for Azure AD)
+SSL                         - (default: 'false')    - rather to run on http or https ('false'|'true') (see SSL cert letsencrypt tool section for fetching the cert)
+SSL_CERT_TYPE               - (default: 'crt') SSL cert file type ('crt'|'pem') - see "SSL cert letsencrypt tool" for steps to get/provide cert
+```
+
+#### SSL cert letsencrypt tool
+
+The tool automates the process of obtaining the real SSL certificate using certbot and letsencrypt to use for running application on https:// for production.
+Certs are valid for 3 months and should be auto-updated. 
+To run the Application we need the first (initial) certificate to provide it to the container. 
+After that, when the Application is already running, the certificate will be automatically renewed (see "Setup auto-renewal")
+
+For steps to use letsencrypt tool please refer to <dir>/nginx-docker/letsencrypt/README.md
 

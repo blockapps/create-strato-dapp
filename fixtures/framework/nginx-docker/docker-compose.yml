@@ -1,3 +1,4 @@
+# WARNING: this docker-compose.yml is only used for development/debugging. For prod deployment refer to root docker-compose.yml
 version: "2.1"
 services:
   nginx:
