@@ -20,15 +20,29 @@ The following tools should already be installed
 git clone https://github.com/blockapps/app-framework.git
 ```
 
-2. From **outside** the repository folder, run the following command:
+2. Install dependencies:
+``` 
+cd app-framework
+yarn install
+```
+
+3. From **outside** the repository folder, run project creation command:
 
 ```
+cd ..
 node app-framework/index.js create <project-name>
 ```
 
-3. Enter your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
+4. Enter your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
 
-4. When you have answered all of the prompts, the script will execute (it may take a couple of minutes). It will create the directory `<project-name>`, and initialize the STRATO dapp. After it finishes, enter the project directory and follow the included `README` for further instructions on deploying the app.
+5. When you have answered all of the prompts, the script will execute (it may take a couple of minutes). It will create the directory `<project-name>`, and initialize the STRATO dapp. After it finishes, enter the project directory and follow the included `README` for further instructions on deploying the app.
+
+### Configuration parameters asked when generating an application
+- Your STRATO node's URL;
+- Name for OAuth token cookie;
+- Client ID and Client Secret for your client on OAuth server;
+- OpenID discovery URL;
+- Callback URLs.
 
 
 ## Assumptions

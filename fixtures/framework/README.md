@@ -62,7 +62,7 @@ Nginx acts as a proxy for the frontend and the backend. It is required so that b
 
 ```
 cd <dir>/<dir>-server
-git submodule update --init --recursive --remote
+git submodule update --init --recursive
 yarn install
 yarn build
 ```
@@ -107,7 +107,7 @@ To stop the app, hit `CTRL+C` on the server and UI windows. To stop the nginx se
 docker stop nginx-docker_nginx_1
 ```
 
-You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, as the `token-getter` utility lauches a web server on the same port. 
+You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, as the `token-getter` utility launches a web server on the same port. 
 
 
 
