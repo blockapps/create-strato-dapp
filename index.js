@@ -32,6 +32,7 @@ if (typeof directory === "object") {
 const serverDirectory = `${directory}-server`;
 const uiDirectory = `${directory}-ui`;
 const nginxDirectory = "nginx-docker";
+const pipelinesDirectory = "pipelines";
 
 
 let configuration = {};
@@ -118,6 +119,7 @@ async function run(dir) {
   fs.mkdirSync(serverDirectory);
   fs.mkdirSync(uiDirectory);
   fs.mkdirSync(nginxDirectory);
+  fs.mkdirSync(pipelinesDirectory);
 
   log(`\tSetting up server`);
   log(`\t\tInitializing server package.json...`);
@@ -298,10 +300,24 @@ async function run(dir) {
   readme = readme.replace(/<discovery-url>/g, `${configuration.openIdDiscoveryUrl}`);
   fs.writeFileSync("README.md", readme);
 
+  log(`\t\tCopying pipelines`);
+  process.chdir(`${pipelinesDirectory}`);
+  fs.copySync(`${__dirname}/fixtures/framework/pipelines/`, "./");
+
+  makeReplacements("Jenkinsfile.test", [{ pattern: /<dir>/g, value: `${dir}` }])
+
   // TODO: Print usage instructions
   log(`Done\n`);
   log(`Enter the ${directory} directory to get started`);
   log("Happy BUIDLing! :) ");
+}
+
+const makeReplacements = (fileName, replacements) => {
+  let content = fs.readFileSync(fileName, "utf-8");
+  replacements.forEach(r => {
+    content = content.replace(r.pattern, r.value);
+  });
+  fs.writeFileSync(fileName, content);
 }
 
 run(directory);
