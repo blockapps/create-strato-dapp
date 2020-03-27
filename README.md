@@ -1,6 +1,6 @@
-# app-framework
+# create-strato-dapp
 
-This utility instantiates a STRATO application. It performs the following steps
+This CLI utility instantiates a STRATO application. It performs the following steps
 
 1. Setup OAuth config
 2. Initialize backend skeleton
@@ -15,27 +15,13 @@ The following tools should already be installed
 2. yarn
 
 ## Usage
-1. Clone the repository.
-``` 
-git clone https://github.com/blockapps/app-framework.git
-```
+1. Install the utility by using:
+`npm i -g create-strato-dapp`
+2. Run project creation command: 
+`create-strato-dapp <project-name>`
+3. Enter your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
 
-2. Install dependencies:
-``` 
-cd app-framework
-yarn install
-```
-
-3. From **outside** the repository folder, run project creation command:
-
-```
-cd ..
-node app-framework/index.js create <project-name>
-```
-
-4. Enter your node's configuration information when prompted. If there is a default shown, simply hit ENTER to accept it.
-
-5. When you have answered all of the prompts, the script will execute (it may take a couple of minutes). It will create the directory `<project-name>`, and initialize the STRATO dapp. After it finishes, enter the project directory and follow the included `README` for further instructions on deploying the app.
+4. When you have answered all of the prompts, the script will execute (it may take a couple of minutes). It will create the directory `<project-name>`, and initialize the STRATO dapp. After it finishes, enter the project directory and follow the included `README` for further instructions on deploying the app.
 
 ### Configuration parameters asked when generating an application
 - Your STRATO node's URL;

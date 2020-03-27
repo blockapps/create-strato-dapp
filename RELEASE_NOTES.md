@@ -1,4 +1,4 @@
-# app-framework release notes
+# create-strato-dapp release notes
 
 ### Version 0.3.0
 
