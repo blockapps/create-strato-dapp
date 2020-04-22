@@ -137,6 +137,7 @@ async function run(dir) {
   spawn.sync("yarn", ["add", "mocha"]);
   spawn.sync("yarn", ["add", "cors"]);
   spawn.sync("yarn", ["add", "jwt-decode"]);
+  spawn.sync("yarn", ["add", "selenium-webdriver"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/core"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/cli"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/node"]);
@@ -189,13 +190,15 @@ async function run(dir) {
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
+    "mocha-babel": "mocha --require @babel/register",
     "token-getter":
       "node --require @babel/register node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
       "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd .."
+    build: "cd blockapps-sol && yarn install && yarn build && cd ..",
+    "test:selenium": "yarn mocha-babel selenium/* -b"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
