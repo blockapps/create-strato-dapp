@@ -215,3 +215,13 @@ After that, when the Application is already running, the certificate will be aut
 
 For steps to use letsencrypt tool please refer to <dir>/nginx-docker/letsencrypt/README.md
 
+#### Selenium tests
+
+Install chrome webdriver on your machine then follow these steps:
+
+```
+cd <dir>/<dir>-server
+yarn test:selenium
+```
+
+Refer the inital testcases.
