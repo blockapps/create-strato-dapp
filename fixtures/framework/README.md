@@ -57,9 +57,8 @@ Nginx acts as a proxy for the frontend and the backend. It is required so that b
 
 ```
 cd <dir>/<dir>-server
-git submodule update --init --recursive
 yarn deploy
-yarn build
+yarn build-blockapps-sol
 yarn start
 ```
 

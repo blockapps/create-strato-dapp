@@ -186,19 +186,12 @@ async function run(dir) {
     start: "babel-node index",
     deploy:
       "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config/${SERVER:-localhost}.config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd .."
+    "build-blockapps-sol": "cd blockapps-sol && yarn install && yarn build && cd .."
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
-  log("\t\tInitializing blockapps-sol submodule");
-  spawn.sync("git", [
-    "submodule",
-    "add",
-    "-b",
-    "SER-25_compatibilityWithRest",
-    "https://github.com/blockapps/blockapps-sol"
-  ]);
-  spawn.sync("yarn", ["build"]);
+  log("\t\tBuilding blockapps-sol module");
+  spawn.sync("yarn", ["build-blockapps-sol"]);
 
   process.chdir(`${startDir}/${dir}`);
 
