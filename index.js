@@ -199,7 +199,10 @@ async function run(dir) {
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
-      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml"
+      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
+    "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
+    "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
+    "test": "yarn test:dapp"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
