@@ -33,7 +33,6 @@ const serverDirectory = `${directory}-server`;
 const uiDirectory = `${directory}-ui`;
 const nginxDirectory = "nginx-docker";
 
-
 let configuration = {};
 
 async function collectNodeDetails() {
@@ -88,15 +87,21 @@ async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
 
   log(`Welcome to the STRATO app-framework utility.`);
-  log(`This tool will generate a basic framework for an application built on STRATO,`);
-  log(`including a React UI and a NodeJS server, integrated with Blockapps-Rest SDK.`);
+  log(
+    `This tool will generate a basic framework for an application built on STRATO,`
+  );
+  log(
+    `including a React UI and a NodeJS server, integrated with Blockapps-Rest SDK.`
+  );
 
   if (command.configFile) {
     configuration = await yaml.safeLoad(
       fs.readFileSync(command.configFile, "utf8")
     );
   } else {
-    log(`\nPlease enter the following configuration parameters (contact Blockapps for credentials):\n`);
+    log(
+      `\nPlease enter the following configuration parameters (contact Blockapps for credentials):\n`
+    );
     await collectNodeDetails();
   }
 
@@ -194,23 +199,9 @@ async function run(dir) {
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
-      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd ..",
-    "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
-    "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
-    "test": "yarn test:dapp"
+      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
-
-  log("\t\tInitializing blockapps-sol submodule");
-  spawn.sync("git", [
-    "submodule",
-    "add",
-    "-b",
-    "SER-25_compatibilityWithRest",
-    "https://github.com/blockapps/blockapps-sol"
-  ]);
-  spawn.sync("yarn", ["build"]);
 
   process.chdir(`${startDir}/${dir}`);
 
@@ -269,7 +260,10 @@ async function run(dir) {
   nginxConfig = nginxConfig.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("nginx.tpl.conf", nginxConfig);
 
-  let letsenryptRenewTool = fs.readFileSync("letsencrypt/renew-ssl-cert.sh", "utf-8");
+  let letsenryptRenewTool = fs.readFileSync(
+    "letsencrypt/renew-ssl-cert.sh",
+    "utf-8"
+  );
   letsenryptRenewTool = letsenryptRenewTool.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("letsencrypt/renew-ssl-cert.sh", letsenryptRenewTool);
 
@@ -295,7 +289,10 @@ async function run(dir) {
   readme = readme.replace(/<dir>/g, `${dir}`);
   readme = readme.replace(/<client-id>/g, `${configuration.clientId}`);
   readme = readme.replace(/<client-secret>/g, `${configuration.clientSecret}`);
-  readme = readme.replace(/<discovery-url>/g, `${configuration.openIdDiscoveryUrl}`);
+  readme = readme.replace(
+    /<discovery-url>/g,
+    `${configuration.openIdDiscoveryUrl}`
+  );
   fs.writeFileSync("README.md", readme);
 
   // TODO: Print usage instructions
