@@ -189,13 +189,17 @@ async function run(dir) {
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
+    "mocha-babel": "node_modules/.bin/mocha --require @babel/register",
     "token-getter":
       "node --require @babel/register node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
       "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd .."
+    build: "cd blockapps-sol && yarn install && yarn build && cd ..",
+    "test:dapp": "yarn mocha-babel dapp/dapp/test/dapp.test.js -b",
+    "test:e2e": "yarn mocha-babel dapp/dapp/test/e2e.test.js -b",
+    "test": "yarn test:dapp"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
@@ -237,7 +241,8 @@ async function run(dir) {
   const uiPackage = JSON.parse(uiPackageJson);
   uiPackage.scripts = {
     ...uiPackage.scripts,
-    develop: "REACT_APP_URL=http://localhost yarn start"
+    develop: "REACT_APP_URL=http://localhost yarn start",
+    "test:ci": "CI=true react-scripts test --env=jsdom --passWithNoTests"
   };
   fs.writeFileSync("package.json", JSON.stringify(uiPackage, null, 2));
 
@@ -267,7 +272,7 @@ async function run(dir) {
   let letsenryptRenewTool = fs.readFileSync("letsencrypt/renew-ssl-cert.sh", "utf-8");
   letsenryptRenewTool = letsenryptRenewTool.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("letsencrypt/renew-ssl-cert.sh", letsenryptRenewTool);
-  
+
   process.chdir(`${startDir}/${dir}`);
 
   fs.copyFileSync(
@@ -297,6 +302,14 @@ async function run(dir) {
   log(`Done\n`);
   log(`Enter the ${directory} directory to get started`);
   log("Happy BUIDLing! :) ");
+}
+
+const makeReplacements = (fileName, replacements) => {
+  let content = fs.readFileSync(fileName, "utf-8");
+  replacements.forEach(r => {
+    content = content.replace(r.pattern, r.value);
+  });
+  fs.writeFileSync(fileName, content);
 }
 
 run(directory);
