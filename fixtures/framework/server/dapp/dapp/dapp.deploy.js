@@ -38,8 +38,9 @@ describe("Framework Dapp - deploy contracts", function() {
 
   it("should upload all the contracts", async () => {
     const dapp = await dappJs.uploadContract(adminUser, options);
-    const deployment = dapp.deploy(options);
+    const deployArgs = { deployFilename: options.config.deployFilename }
+    const deployment = dapp.deploy(deployArgs);
     assert.isDefined(deployment);
-    assert.equal(deployment.contract.address, dapp.address);
+    assert.equal(deployment.dapp.contract.address, dapp.address);
   });
 });
