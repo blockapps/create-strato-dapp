@@ -105,12 +105,15 @@ async function run(options) {
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
     "token-getter":
-      "node --require @babel/register node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
+      "babel-node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
       "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd .."
+    build: "cd blockapps-sol && yarn install && yarn build && cd ..",
+    "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
+    "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
+    "test": "yarn test:dapp"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
@@ -152,7 +155,9 @@ async function run(options) {
   const uiPackage = JSON.parse(uiPackageJson);
   uiPackage.scripts = {
     ...uiPackage.scripts,
-    develop: "REACT_APP_URL=http://localhost yarn start"
+    develop: "REACT_APP_URL=http://localhost yarn start",
+    test: "react-scripts test --env=jsdom",
+    "test:ci": "CI=true react-scripts test --env=jsdom --passWithNoTests"
   };
   fs.writeFileSync("package.json", JSON.stringify(uiPackage, null, 2));
 
