@@ -1,12 +1,12 @@
 {
   "name": "create-strato-dapp",
   "version": "0.4.0",
-  "description": "Configuration and framework for STRATO DApps",
+  "description": "The bootstrap tool for STRATO DApps",
   "bin": "./bin/cli.js",
   "main": "index.js",
-  "repository": "https://github.com/blockapps/app-framework",
-  "author": "BlockApps Inc",
-  "license": "MIT",
+  "repository": "https://github.com/blockapps/create-strato-dapp",
+  "author": "BlockApps Inc.",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">= 10.1.0"
   },
