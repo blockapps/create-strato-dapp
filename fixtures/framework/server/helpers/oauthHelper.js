@@ -7,8 +7,6 @@ const oauth = oauthUtil.init(config.nodes[0].oauth)
 const CACHED_DATA = {
   serviceToken: null,
   serviceTokenExpiresAt: null,
-  intServerToken: null,
-  intServerTokenExpiresAt: null,
 }
 
 const SERVICE_TOKEN_LIFETIME_RESERVE_SECONDS = 5
@@ -24,9 +22,9 @@ async function createStratoUser(accessToken) {
     let user = await rest.createUser(accessToken, options);
     return { status: 200, message: "success", user };
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return {
-      status: r.response ? e.response.status : "Unknown",
+      status: e.response ? e.response.status : (e.code ? e.code : "NO_CONNECTION"),
       message: `error while creating user`
     };
   }
