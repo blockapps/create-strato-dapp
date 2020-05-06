@@ -110,22 +110,11 @@ async function run(options) {
     "start:prod": "NODE_ENV=production babel-node index",
     deploy:
       "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd ..",
     "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
     "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
     "test": "yarn test:dapp"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
-
-  log("\t\tInitializing blockapps-sol submodule");
-  spawn.sync("git", [
-    "submodule",
-    "add",
-    "-b",
-    "SER-25_compatibilityWithRest",
-    "https://github.com/blockapps/blockapps-sol"
-  ]);
-  spawn.sync("yarn", ["build"]);
 
   process.chdir(`${startDir}/${dir}`);
 
@@ -184,7 +173,10 @@ async function run(options) {
   nginxConfig = nginxConfig.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("nginx.tpl.conf", nginxConfig);
 
-  let letsenryptRenewTool = fs.readFileSync("letsencrypt/renew-ssl-cert.sh", "utf-8");
+  let letsenryptRenewTool = fs.readFileSync(
+    "letsencrypt/renew-ssl-cert.sh",
+    "utf-8"
+  );
   letsenryptRenewTool = letsenryptRenewTool.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("letsencrypt/renew-ssl-cert.sh", letsenryptRenewTool);
 
@@ -210,13 +202,15 @@ async function run(options) {
   readme = readme.replace(/<dir>/g, `${dir}`);
   readme = readme.replace(/<client-id>/g, `${configuration.clientId}`);
   readme = readme.replace(/<client-secret>/g, `${configuration.clientSecret}`);
-  readme = readme.replace(/<discovery-url>/g, `${configuration.openIdDiscoveryUrl}`);
+  readme = readme.replace(
+    /<discovery-url>/g,
+    `${configuration.openIdDiscoveryUrl}`
+  );
   fs.writeFileSync("README.md", readme);
 
-  // TODO: Print usage instructions
   log(`Done\n`);
-  log(`Enter the ${dir} directory to get started`);
-  log("Happy BUILDing! :) ");
+  log(`Enter the ${dir} directory and check README.md to get started`);
+  log("Happy building!");
 }
 
 module.exports = run;
