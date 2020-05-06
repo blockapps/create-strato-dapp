@@ -22,7 +22,6 @@ COPY . /usr/src/<dir>-server/
 
 WORKDIR /usr/src/<dir>-server
 
-RUN yarn install && \
-  yarn build
+RUN yarn install
 
 CMD [ "sh", "/usr/src/<dir>-server/docker-run.sh" ]

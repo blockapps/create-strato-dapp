@@ -63,7 +63,6 @@ Nginx acts as a proxy for the frontend and the backend. It is required so that b
 ```
 cd <dir>/<dir>-server
 yarn install
-yarn build-blockapps-sol
 ```
 
 Deploy contracts:
@@ -115,7 +114,6 @@ You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, a
 
 #### 1. Build docker images
 ```
-git submodule update --init --recursive --remote
 sudo docker-compose build
 ```
 
