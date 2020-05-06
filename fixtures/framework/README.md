@@ -99,6 +99,7 @@ sudo docker-compose build
     export OAUTH_CLIENT_ID=<oauth provider client id>
     export OAUTH_CLIENT_SECRET=<oauth provider client secret>
     export NODE_LABEL='My boot node'
+    export SSL=true
 
     docker-compose up -d
     ```
@@ -129,12 +130,13 @@ Secondary node is the one that connects to the existing Dapp contract on the blo
     set -e
     
     export API_DEBUG=true
-        export SERVER_HOST=http://<your external IP address> # can't use 127.0.0.1
-        export SERVER_IP=<your external IP address> # can't use 127.0.0.1
-        export OAUTH_OPENID_DISCOVERY_URL=https://<oauth provider url>/.well-known/openid-configuration
-        export OAUTH_CLIENT_ID=<oauth provider client id>
-        export OAUTH_CLIENT_SECRET=<oauth provider client secret>
-        export NODE_LABEL='My secondary node'
+    export SERVER_HOST=http://<your external IP address> # can't use 127.0.0.1
+    export SERVER_IP=<your external IP address> # can't use 127.0.0.1
+    export OAUTH_OPENID_DISCOVERY_URL=https://<oauth provider url>/.well-known/openid-configuration
+    export OAUTH_CLIENT_ID=<oauth provider client id>
+    export OAUTH_CLIENT_SECRET=<oauth provider client secret>
+    export NODE_LABEL='My secondary node'
+    export SSL=true
     
     docker-compose up -d
     ```
@@ -167,7 +169,7 @@ OAUTH_SERVICE_OAUTH_FLOW    - (default: 'client-credential') - OAuth flow to use
 OAUTH_TOKEN_FIELD           - (default: 'access_token') - value of the service flow response to use as access token (e.g. 'access_token'|'id_token')
 OAUTH_TOKEN_USERNAME_PROPERTY               - (default: 'email') - OAuth access token's property to use as user identifier in authorization code grant flow (e.g. 'email' for Keycloak, 'upn' for Azure AD)
 OAUTH_TOKEN_USERNAME_PROPERTY_SERVICE_FLOW  - (default: 'email') - OAuth access token's property to use as user identifier in oauth service (e.g. client-credential) flow (e.g. 'email for Keycloak, 'oid' for Azure AD)
-SSL                         - (default: 'false')    - rather to run on http or https ('false'|'true') (see SSL cert letsencrypt tool section for fetching the cert)
+SSL                         - (default: 'true')    - rather to run on http or https ('false'|'true') (see SSL cert letsencrypt tool section for fetching the cert)
 SSL_CERT_TYPE               - (default: 'crt') SSL cert file type ('crt'|'pem') - see "SSL cert letsencrypt tool" for steps to get/provide cert
 ```
 
