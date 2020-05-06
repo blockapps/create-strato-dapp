@@ -4,6 +4,7 @@
 
 - Renamed app-framework to create-strato-dapp
 - Converted the tool into npm package
+- Added the programmatic service token fetch during deploy which makes the ADMIN_TOKEN env var obsolete
 - Removed the blockapps-sol git submodule dependency from generated app
 - Added basic tests in generated app
 
