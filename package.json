@@ -1,6 +1,6 @@
 {
   "name": "create-strato-dapp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Configuration and framework for STRATO DApps",
   "bin": "./bin/cli.js",
   "main": "index.js",
