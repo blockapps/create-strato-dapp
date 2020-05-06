@@ -1,19 +1,16 @@
 import { assert } from "chai";
 import config from "../../load.config";
 import dappJs from "./dapp";
-import dotenv from "dotenv";
 import oauthHelper from "../../helpers/oauthHelper";
 import RestStatus from "http-status-codes";
 
-const loadEnv = dotenv.config();
-assert.isUndefined(loadEnv.error);
 
 const options = { config, logger: console };
-const adminCredentials = { token: process.env.ADMIN_TOKEN };
 
 describe("Framework Dapp - deploy contracts", function() {
   this.timeout(config.timeout);
 
+  let adminCredentials;
   let adminUser;
 
   before(async () => {
@@ -21,7 +18,14 @@ describe("Framework Dapp - deploy contracts", function() {
       config.deployFilename,
       "Deployment filename (output) argument missing. Set in config"
     );
-    assert.isDefined(process.env.ADMIN_TOKEN, "ADMIN_TOKEN should be defined");
+    let serviceUserToken;
+    try {
+      serviceUserToken = await oauthHelper.getServiceToken()
+    } catch(e) {
+      console.error("ERROR: Unable to fetch the service user token, check your OAuth settings in config", e);
+      throw e
+    }
+    adminCredentials = { token: serviceUserToken };
     const adminEmail = oauthHelper.getEmailIdFromToken(adminCredentials.token);
     console.log("Creating admin", adminEmail);
     const adminResponse = await oauthHelper.createStratoUser(
@@ -38,8 +42,9 @@ describe("Framework Dapp - deploy contracts", function() {
 
   it("should upload all the contracts", async () => {
     const dapp = await dappJs.uploadContract(adminUser, options);
-    const deployment = dapp.deploy(options);
+    const deployArgs = { deployFilename: options.config.deployFilename }
+    const deployment = dapp.deploy(deployArgs);
     assert.isDefined(deployment);
-    assert.equal(deployment.contract.address, dapp.address);
+    assert.equal(deployment.dapp.contract.address, dapp.address);
   });
 });

@@ -6,7 +6,7 @@ if (!config) {
   config = fsUtil.getYaml(
     process.env.SERVER
       ? `config/${process.env.SERVER}.config.yaml`
-      : `config.yaml`
+        : `${process.env.CONFIG_DIR_PATH || '.'}/config.yaml`,
   );
 }
 

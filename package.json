@@ -1,7 +1,8 @@
 {
-  "name": "app-framework",
-  "version": "0.2.0",
+  "name": "create-strato-dapp",
+  "version": "0.4.0",
   "description": "Configuration and framework for STRATO DApps",
+  "bin": "./bin/cli.js",
   "main": "index.js",
   "repository": "https://github.com/blockapps/app-framework",
   "author": "BlockApps Inc",
@@ -10,10 +11,11 @@
     "node": ">= 10.1.0"
   },
   "dependencies": {
-    "commander": "^2.19.0",
+    "commander": "^5.0.0",
     "cross-spawn": "^6.0.5",
     "fs-extra": "^7.0.1",
     "inquirer": "^6.3.1",
+    "is-valid-path": "^0.1.1",
     "js-yaml": "^3.13.1"
   }
 }
