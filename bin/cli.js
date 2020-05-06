@@ -23,15 +23,15 @@ async function collectNodeDetails(dir) {
             default: `${dir}_session`
         },
         {
+            name: "openIdDiscoveryUrl",
+            validate: validateNotEmpty
+        },
+        {
             name: "clientId",
             validate: validateNotEmpty
         },
         {
             name: "clientSecret",
-            validate: validateNotEmpty
-        },
-        {
-            name: "openIdDiscoveryUrl",
             validate: validateNotEmpty
         },
         {
