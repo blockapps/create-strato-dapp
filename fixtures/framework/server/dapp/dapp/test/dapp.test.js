@@ -1,26 +1,30 @@
 import { assert, fsUtil, util } from 'blockapps-rest'
-import dotenv from "dotenv";
 import RestStatus from "http-status-codes";
 import config from '../../../load.config'
 import oauthHelper from "../../../helpers/oauthHelper";
 import dappJs from '../dapp'
 
-const loadEnv = dotenv.config();
-assert.isUndefined(loadEnv.error);
 
 const testName = 'deploy.test'
 
 const options = { config, name: testName, logger: console }
 
-const adminCredentials = { token: process.env.ADMIN_TOKEN };
-
 describe('Dapp Deployment tests', function () {
   this.timeout(config.timeout)
 
   const deployFilename = `./config/testdeploy.${util.uid()}.yaml`
-  let admin, dappDeployArgs
+  let admin
+  let adminCredentials
+  
   before(async () => {
-    assert.isDefined(process.env.ADMIN_TOKEN, "ADMIN_TOKEN should be defined");
+    let serviceUserToken;
+    try {
+      serviceUserToken = await oauthHelper.getServiceToken()
+    } catch(e) {
+      console.error("ERROR: Unable to fetch the service user token, check your OAuth settings in config", e);
+      throw e
+    }
+    adminCredentials = { token: serviceUserToken };
     const adminEmail = oauthHelper.getEmailIdFromToken(adminCredentials.token);
     console.log("Creating admin", adminEmail);
     const adminResponse = await oauthHelper.createStratoUser(
