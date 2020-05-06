@@ -1,4 +1,11 @@
-# app-framework release notes
+# create-strato-dapp release notes
+
+### Version 0.4.0
+
+- Renamed app-framework to create-strato-dapp
+- Converted the tool into npm package
+- Removed the blockapps-sol git submodule dependency from generated app
+- Added basic tests in generated app
 
 ### Version 0.3.0
 
