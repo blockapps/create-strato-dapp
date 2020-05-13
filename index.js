@@ -33,6 +33,7 @@ async function run(options) {
   log(`\tCreating folder structure...`);
   fs.mkdirSync(serverDirectory);
   fs.mkdirSync(uiDirectory);
+  fs.mkdirSync(seleniumDirectory);
   fs.mkdirSync(nginxDirectory);
 
   log(`\tSetting up server`);
