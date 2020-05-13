@@ -1,8 +1,8 @@
 # create-strato-dapp release notes
 
-### Version 0.5.0
+### Version 0.4.1
 
-- Added selenium test and their configration
+- Added initial selenium tests configuration
 
 ### Version 0.4.0
 

@@ -1,6 +1,6 @@
 {
   "name": "create-strato-dapp",
-  "version": "0.5.0",
+  "version": "0.4.1",
   "description": "The bootstrap tool for STRATO DApps",
   "bin": "./bin/cli.js",
   "main": "index.js",
