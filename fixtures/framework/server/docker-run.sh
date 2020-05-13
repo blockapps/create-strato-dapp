@@ -105,8 +105,9 @@ if [ ! -f "${CONFIG_DIR_PATH}/config.yaml" ]; then
   touch .env
   
   if test -f "${CONFIG_DIR_PATH}/${DEPLOY_FILE_NAME}"; then
-    echo "deploy file exists - secondary node - running 'deploy:network'"
-    SERVER=generated yarn deploy:network
+    echo "deploy file exists - secondary node - nothing to deploy"
+    # Uncomment if application requires additional deploy steps on secondary nodes:
+    #SERVER=generated yarn deploy:secondary
   else
     echo "deploy file does not exist - bootnode - running 'deploy'"
     SERVER=generated yarn deploy
@@ -118,7 +119,7 @@ else
     touch .env
     echo "Config and deploy files exist - skipping deploy and running the app"
     if [ ! -f "${CONFIG_DIR_PATH}/.deployed" ]; then
-      echo "ERROR: Config and deploy files exist but the deploy was not successfully finished: if running the secondary node, most probably there was an error in 'deploy:network' when the container was started for the first time"
+      echo "ERROR: Config and deploy files exist but the deploy was not successfully finished: if running the secondary node, most probably there was an error in deployment when the container was started for the first time"
       exit 52
     fi
   else

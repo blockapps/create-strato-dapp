@@ -1,110 +1,20 @@
-const commander = require("commander");
-const package = require("./package.json");
 const fs = require("fs-extra");
-const path = require("path");
-const spawn = require("cross-spawn");
-const inquirer = require("inquirer");
 const yaml = require("js-yaml");
+const spawn = require("cross-spawn");
 const log = console.log;
 const error = console.error;
-let directory;
 
-const command = new commander.Command("create <project-directory>")
-  .version(package.version)
-  .option("-c, --config-file <file>", "configuration file")
-  .action((cmd, projectDir) => {
-    directory = projectDir;
-  })
-  .parse(process.argv);
+async function run(options) {
+  const { dir, configuration } = options;
 
-if (typeof directory === "undefined") {
-  printUsage("Missing command!");
-  process.exit();
-}
-
-if (typeof directory === "object") {
-  printUsage("Please specify project name!");
-  process.exit();
-}
-
-// TODO: regex check to make sure project name is a valid directory
-
-const serverDirectory = `${directory}-server`;
-const uiDirectory = `${directory}-ui`;
-const nginxDirectory = "nginx-docker";
-
-let configuration = {};
-
-async function collectNodeDetails() {
-  function validateNotEmpty(input) {
-    return input !== "";
-  }
-
-  const prompts = [
-    {
-      message: "Your STRATO node's URL (including http:// and port number):",
-      name: "stratoNodeURL",
-      validate: validateNotEmpty
-    },
-    {
-      name: "appTokenCookieName",
-      default: `${directory}_session`
-    },
-    {
-      name: "clientId",
-      validate: validateNotEmpty
-    },
-    {
-      name: "clientSecret",
-      validate: validateNotEmpty
-    },
-    {
-      name: "openIdDiscoveryUrl",
-      validate: validateNotEmpty
-    },
-    {
-      name: "redirectUri",
-      default: `http://localhost/api/v1/authentication/callback`
-    },
-    {
-      name: "logoutRedirectUri",
-      default: `http://localhost`
-    }
-  ];
-
-  configuration = await inquirer.prompt(prompts);
-}
-
-function printUsage(errMsg) {
-  error(errMsg);
-  log(`Usage: ${package.name} create <project-name>`);
-  log();
-  log("For example:");
-  log(`   ${package.name} create my-strato-dapp`);
-}
-
-async function run(dir) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
+  const serverDirectory = `${dir}-server`;
+  const uiDirectory = `${dir}-ui`;
+  const nginxDirectory = "nginx-docker";
 
   log(`Welcome to the STRATO app-framework utility.`);
-  log(
-    `This tool will generate a basic framework for an application built on STRATO,`
-  );
-  log(
-    `including a React UI and a NodeJS server, integrated with Blockapps-Rest SDK.`
-  );
-
-  if (command.configFile) {
-    configuration = await yaml.safeLoad(
-      fs.readFileSync(command.configFile, "utf8")
-    );
-  } else {
-    log(
-      `\nPlease enter the following configuration parameters (contact Blockapps for credentials):\n`
-    );
-    await collectNodeDetails();
-  }
-
+  log(`This tool will generate a basic framework for an application built on STRATO,`);
+  log(`including a React UI and a NodeJS server, integrated with Blockapps-Rest SDK.`);
   log(`Checking directory ${dir}...`);
   fs.ensureDirSync(dir);
 
@@ -200,13 +110,12 @@ async function run(dir) {
       "babel-node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
-    deploy:
-      "cp config/${SERVER:-localhost}.config.yaml config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config config.yaml",
+    deploy: "cp config/${SERVER:-localhost}.config.yaml ${CONFIG_DIR_PATH:-.}/config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config ${CONFIG_DIR_PATH:-.}/config.yaml",
     build: "cd blockapps-sol && yarn install && yarn build && cd ..",
     "test:selenium": "yarn mocha-babel selenium/* -b",
     "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
     "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
-    "test": "yarn test:dapp"
+    "test": "yarn test:dapp && yarn test:e2e"
   };
   fs.writeFileSync("package.json", JSON.stringify(serverPackage, null, 2));
 
@@ -302,10 +211,9 @@ async function run(dir) {
   );
   fs.writeFileSync("README.md", readme);
 
-  // TODO: Print usage instructions
   log(`Done\n`);
-  log(`Enter the ${directory} directory to get started`);
-  log("Happy BUIDLing! :) ");
+  log(`Enter the ${dir} directory and check README.md to get started`);
+  log("Happy building!");
 }
 
-run(directory);
+module.exports = run;

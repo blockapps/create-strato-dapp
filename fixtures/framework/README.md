@@ -6,39 +6,16 @@
 
 The following tools should already be installed
 
-1. docker
-2. docker-compose
+1. docker 17.06+
+2. docker-compose 17.06+
 3. NodeJS 10+ (for development mode only)
 4. yarn (npm) (for development mode only)
 
-### Run <dir> app locally (for development)
-
-#### Obtaining OAuth access token
-
-This project requires an OAuth access token provided as `ADMIN_TOKEN` environment variable in order for the app deployment to succeed. 
-
-*NOTE:* the <dir>/<dir>-server/dapp/dapp/dapp.deploy.js may be changed in the way to obtain the service user's access token from OAuth provider programmatically in the code. In that case the token-getter is not required
-
-The token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. 
-To use this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
-
-```
-cd <dir>/<dir>-server
-sudo yarn token-getter
-```
-
-This command launches a small web server on the same host (hostname and port) specified in the `redirectUri` field of `config/localhost.config.yaml`. This field was filled in by the app-framework utility from the configuration parameters it collected from the user.
-- Copy the URL shown by the `token-getter` utility and enter it into your browser.
-- Log in with your openID credentials.
-- Once logged in, the web server will display the token on a web page. 
-- Copy the "Access Token".
-- Hit `CTRL+C` to quit the `token-getter`.
-- Paste the token into the `.env` file under the `<dir>-server` folder, and label it as the environment variable `ADMIN_TOKEN`. Example:
-```
-ADMIN_TOKEN=eyJhbGci.....
-```
+### Run <dir> application locally (for development)
 
 #### Start nginx
+
+Nginx acts as a proxy for the frontend and the backend. It is required so that both the frontend and the backend have the same root URL (required for authentication).
 
 ```
 cd <dir>/nginx-docker
@@ -54,22 +31,17 @@ If you are running on Mac, execute the following command:
 HOST_IP=docker.for.mac.localhost docker-compose up -d
 ```
 
-
-
-Nginx acts as a proxy for the frontend and the backend. It is required so that both the frontend and the backend have the same root URL (required for authentication).
-
 #### Deploy the Dapp and Start The Backend
 
 ```
 cd <dir>/<dir>-server
 yarn install
-yarn build-blockapps-sol
 ```
 
 Deploy contracts:
 ```
 SERVER=localhost yarn deploy
-# SERVER var can be skipped as `localhost` is the default config name used
+# SERVER var can be skipped as `localhost` is the default config name used (config/localhost.config.yaml)
 ```
 
 Start the backend server:
@@ -78,7 +50,6 @@ yarn start
 ```
 
 *NOTE: `yarn start` will start the server and use the terminal window to dump log information. To stop the server, hit `CTRL+C`*.
-
 
 
 #### Launch UI
@@ -106,16 +77,11 @@ To stop the app, hit `CTRL+C` on the server and UI windows. To stop the nginx se
 docker stop nginx-docker_nginx_1
 ```
 
-You will need to stop the nginx server if you want to get a new `ADMIN_TOKEN`, as the `token-getter` utility launches a web server on the same port. 
-
-
-
 
 ### Run <dir> app in Docker (the production way)
 
 #### 1. Build docker images
 ```
-git submodule update --init --recursive --remote
 sudo docker-compose build
 ```
 
@@ -133,6 +99,7 @@ sudo docker-compose build
     export OAUTH_CLIENT_ID=<oauth provider client id>
     export OAUTH_CLIENT_SECRET=<oauth provider client secret>
     export NODE_LABEL='My boot node'
+    export SSL=true
 
     docker-compose up -d
     ```
@@ -163,12 +130,13 @@ Secondary node is the one that connects to the existing Dapp contract on the blo
     set -e
     
     export API_DEBUG=true
-        export SERVER_HOST=http://<your external IP address> # can't use 127.0.0.1
-        export SERVER_IP=<your external IP address> # can't use 127.0.0.1
-        export OAUTH_OPENID_DISCOVERY_URL=https://<oauth provider url>/.well-known/openid-configuration
-        export OAUTH_CLIENT_ID=<oauth provider client id>
-        export OAUTH_CLIENT_SECRET=<oauth provider client secret>
-        export NODE_LABEL='My secondary node'
+    export SERVER_HOST=http://<your external IP address> # can't use 127.0.0.1
+    export SERVER_IP=<your external IP address> # can't use 127.0.0.1
+    export OAUTH_OPENID_DISCOVERY_URL=https://<oauth provider url>/.well-known/openid-configuration
+    export OAUTH_CLIENT_ID=<oauth provider client id>
+    export OAUTH_CLIENT_SECRET=<oauth provider client secret>
+    export NODE_LABEL='My secondary node'
+    export SSL=true
     
     docker-compose up -d
     ```
@@ -201,7 +169,7 @@ OAUTH_SERVICE_OAUTH_FLOW    - (default: 'client-credential') - OAuth flow to use
 OAUTH_TOKEN_FIELD           - (default: 'access_token') - value of the service flow response to use as access token (e.g. 'access_token'|'id_token')
 OAUTH_TOKEN_USERNAME_PROPERTY               - (default: 'email') - OAuth access token's property to use as user identifier in authorization code grant flow (e.g. 'email' for Keycloak, 'upn' for Azure AD)
 OAUTH_TOKEN_USERNAME_PROPERTY_SERVICE_FLOW  - (default: 'email') - OAuth access token's property to use as user identifier in oauth service (e.g. client-credential) flow (e.g. 'email for Keycloak, 'oid' for Azure AD)
-SSL                         - (default: 'false')    - rather to run on http or https ('false'|'true') (see SSL cert letsencrypt tool section for fetching the cert)
+SSL                         - (default: 'true')    - rather to run on http or https ('false'|'true') (see SSL cert letsencrypt tool section for fetching the cert)
 SSL_CERT_TYPE               - (default: 'crt') SSL cert file type ('crt'|'pem') - see "SSL cert letsencrypt tool" for steps to get/provide cert
 ```
 
@@ -213,6 +181,35 @@ To run the Application we need the first (initial) certificate to provide it to 
 After that, when the Application is already running, the certificate will be automatically renewed (see "Setup auto-renewal")
 
 For steps to use letsencrypt tool please refer to <dir>/nginx-docker/letsencrypt/README.md
+
+#### Obtaining OAuth access token
+
+Each call made to STRATO API requires the valid access token obtained from OAuth provider (the App and the STRATO node should use same OpenID Discovery URL)
+In the `yarn deploy` step the application is programmatically fetching the access token of the service user (with Client Credentials Grand flow of OAuth2) in order to make the API calls with it.
+
+During development you may also want to obtain the token of the specific user using some of the standard OAuth2 flows.
+
+The token can be obtained by using the `token-getter` utility packaged in `blockapps-rest`. 
+To use this utility, run `sudo yarn token-getter` from the `<dir>-server` directory:
+
+```
+cd <dir>/<dir>-server
+sudo yarn token-getter
+```
+*NOTE: You may need to stop your nginx container to release the port for token-getter*
+
+
+This command launches a small web server on the same host (hostname and port) specified in the `redirectUri` field of `config/localhost.config.yaml`. This field was filled in by the app-framework utility from the configuration parameters it collected from the user.
+- Copy the URL shown by the `token-getter` utility and enter it into your browser.
+- Log in with your OAuth provider credentials.
+- Once logged in, the web server will display the token on a web page. 
+- Copy the "Access Token".
+- Hit `CTRL+C` to quit the `token-getter`.
+
+For additional help on token-getter:
+```
+sudo yarn token-getter -- --help
+```
 
 #### Selenium tests
 
