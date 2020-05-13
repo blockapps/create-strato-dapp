@@ -10,6 +10,7 @@ async function run(options) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
   const serverDirectory = `${dir}-server`;
   const uiDirectory = `${dir}-ui`;
+  const seleniumDirectory = `${dir}-selenium`;
   const nginxDirectory = "nginx-docker";
 
   log(`Welcome to the STRATO app-framework utility.`);
@@ -32,6 +33,7 @@ async function run(options) {
   log(`\tCreating folder structure...`);
   fs.mkdirSync(serverDirectory);
   fs.mkdirSync(uiDirectory);
+  fs.mkdirSync(seleniumDirectory);
   fs.mkdirSync(nginxDirectory);
 
   log(`\tSetting up server`);
@@ -108,8 +110,7 @@ async function run(options) {
       "babel-node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
-    deploy:
-      "cp config/${SERVER:-localhost}.config.yaml ${CONFIG_DIR_PATH:-.}/config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config ${CONFIG_DIR_PATH:-.}/config.yaml",
+    deploy: "cp config/${SERVER:-localhost}.config.yaml ${CONFIG_DIR_PATH:-.}/config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config ${CONFIG_DIR_PATH:-.}/config.yaml",
     "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
     "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
     "test": "yarn test:dapp && yarn test:e2e"
@@ -158,6 +159,33 @@ async function run(options) {
   uiDockerRun = uiDockerRun.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("docker-run.sh", uiDockerRun);
 
+  process.chdir(`${startDir}/${dir}`);
+
+  log(`\tSetting up selenium`);
+  log(`\t\tInitializing selenium package.json...`);
+  process.chdir(seleniumDirectory);
+  spawn.sync("yarn", ["init", "-yp"]);
+
+  log(`\t\tInstalling selenium node modules...`);
+  spawn.sync("yarn", ["add", "mocha"]);
+  spawn.sync("yarn", ["add", "chai"]);
+  spawn.sync("yarn", ["add", "selenium-webdriver"]);
+  spawn.sync("yarn", ["add", "--dev", "@babel/core"]);
+  spawn.sync("yarn", ["add", "--dev", "@babel/preset-env"]);
+  spawn.sync("yarn", ["add", "--dev", "@babel/register"]);
+
+  log(`\t\tCopying selenium fixtures...`);
+  fs.copySync(`${__dirname}/fixtures/framework/selenium/`, "./");
+
+  log(`\t\tUpdating selenium scripts...`);
+  const seleniumPackageJson = fs.readFileSync("package.json", "utf-8");
+  const seleniumPackage = JSON.parse(seleniumPackageJson);
+  seleniumPackage.scripts = {
+    "mocha-babel": "mocha --require @babel/register",
+    "test:selenium": "yarn mocha-babel test/* -b"
+  };
+  fs.writeFileSync("package.json", JSON.stringify(seleniumPackage, null, 2));
+  
   process.chdir(`${startDir}/${dir}`);
 
   log(`\t\tSetting up docker`);
