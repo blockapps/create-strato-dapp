@@ -13,11 +13,11 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
+      <div className="App" name="app">
         <Card className="App-Card">
-          <h1>Hola!</h1>
+          <h1 name="title">Hola!</h1>
 
-          <pre>
+          <pre name="health-status">
             {JSON.stringify(this.props.health, null, 2)}            
           </pre>
         </Card>

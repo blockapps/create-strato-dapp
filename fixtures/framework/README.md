@@ -210,3 +210,14 @@ For additional help on token-getter:
 ```
 sudo yarn token-getter -- --help
 ```
+
+#### Selenium tests
+
+Install chrome webdriver on your machine (https://chromedriver.chromium.org/downloads) then follow these steps:
+
+```
+cd <dir>/<dir>-selenium
+yarn test:selenium
+```
+
+Refer the inital testcases.

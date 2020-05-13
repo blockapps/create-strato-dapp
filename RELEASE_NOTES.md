@@ -1,5 +1,9 @@
 # create-strato-dapp release notes
 
+### Version 0.4.1
+
+- Added initial selenium tests configuration
+
 ### Version 0.4.0
 
 - Renamed app-framework to create-strato-dapp
