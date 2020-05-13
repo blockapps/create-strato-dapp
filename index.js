@@ -105,14 +105,11 @@ async function run(options) {
   const serverPackageJson = fs.readFileSync("package.json", "utf-8");
   const serverPackage = JSON.parse(serverPackageJson);
   serverPackage.scripts = {
-    "mocha-babel": "mocha --require @babel/register",
     "token-getter":
       "babel-node node_modules/blockapps-rest/dist/util/oauth.client.js --flow authorization-code --config config/${SERVER:-localhost}.config.yaml",
     start: "babel-node index",
     "start:prod": "NODE_ENV=production babel-node index",
     deploy: "cp config/${SERVER:-localhost}.config.yaml ${CONFIG_DIR_PATH:-.}/config.yaml && mocha --require @babel/register dapp/dapp/dapp.deploy.js --config ${CONFIG_DIR_PATH:-.}/config.yaml",
-    build: "cd blockapps-sol && yarn install && yarn build && cd ..",
-    "test:selenium": "yarn mocha-babel selenium/* -b",
     "test:dapp": "mocha --require @babel/register dapp/dapp/test/dapp.test.js -b",
     "test:e2e": "mocha --require @babel/register dapp/dapp/test/e2e.test.js -b",
     "test": "yarn test:dapp && yarn test:e2e"
