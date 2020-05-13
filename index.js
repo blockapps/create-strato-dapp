@@ -10,6 +10,7 @@ async function run(options) {
   // TODO: Check for dependencies - yarn, create-react-app, docker
   const serverDirectory = `${dir}-server`;
   const uiDirectory = `${dir}-ui`;
+  const seleniumDirectory = `${dir}-selenium`;
   const nginxDirectory = "nginx-docker";
 
   log(`Welcome to the STRATO app-framework utility.`);
@@ -52,7 +53,6 @@ async function run(options) {
   spawn.sync("yarn", ["add", "mocha"]);
   spawn.sync("yarn", ["add", "cors"]);
   spawn.sync("yarn", ["add", "jwt-decode"]);
-  spawn.sync("yarn", ["add", "selenium-webdriver"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/core"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/cli"]);
   spawn.sync("yarn", ["add", "--dev", "@babel/node"]);
@@ -158,6 +158,33 @@ async function run(options) {
   uiDockerRun = uiDockerRun.replace(/<dir>/g, `${dir}`);
   fs.writeFileSync("docker-run.sh", uiDockerRun);
 
+  process.chdir(`${startDir}/${dir}`);
+
+  log(`\tSetting up selenium`);
+  log(`\t\tInitializing selenium package.json...`);
+  process.chdir(seleniumDirectory);
+  spawn.sync("yarn", ["init", "-yp"]);
+
+  log(`\t\tInstalling selenium node modules...`);
+  spawn.sync("yarn", ["add", "mocha"]);
+  spawn.sync("yarn", ["add", "chai"]);
+  spawn.sync("yarn", ["add", "selenium-webdriver"]);
+  spawn.sync("yarn", ["add", "--dev", "@babel/core"]);
+  spawn.sync("yarn", ["add", "--dev", "@babel/preset-env"]);
+  spawn.sync("yarn", ["add", "--dev", "@babel/register"]);
+
+  log(`\t\tCopying selenium fixtures...`);
+  fs.copySync(`${__dirname}/fixtures/framework/selenium/`, "./");
+
+  log(`\t\tUpdating selenium scripts...`);
+  const seleniumPackageJson = fs.readFileSync("package.json", "utf-8");
+  const seleniumPackage = JSON.parse(seleniumPackageJson);
+  seleniumPackage.scripts = {
+    "mocha-babel": "mocha --require @babel/register",
+    "test:selenium": "yarn mocha-babel test/* -b"
+  };
+  fs.writeFileSync("package.json", JSON.stringify(seleniumPackage, null, 2));
+  
   process.chdir(`${startDir}/${dir}`);
 
   log(`\t\tSetting up docker`);
