@@ -213,10 +213,10 @@ sudo yarn token-getter -- --help
 
 #### Selenium tests
 
-Install chrome webdriver on your machine then follow these steps:
+Install chrome webdriver on your machine (https://chromedriver.chromium.org/downloads) then follow these steps:
 
 ```
-cd <dir>/<dir>-server
+cd <dir>/<dir>-selenium
 yarn test:selenium
 ```
 
